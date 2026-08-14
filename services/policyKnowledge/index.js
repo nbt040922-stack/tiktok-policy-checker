@@ -41,7 +41,7 @@ function clone(value) {
 }
 
 class PolicyRepository {
-  constructor({ manifest, taxonomy, records, version, allowSynthetic = false }) {
+  constructor({ manifest, taxonomy, records, version, allowSynthetic = false, requireReviewed = false }) {
     validateManifest(manifest);
     validateTaxonomy(taxonomy);
     const supportedVersions = new Set([manifest.policySetVersion, ...manifest.availableVersions]);
@@ -49,7 +49,15 @@ class PolicyRepository {
     if (!supportedVersions.has(this.version)) throw new PolicyValidationError(`Unsupported policy version: ${this.version}`);
     const domains = new Set(manifest.domains);
     const categories = new Set(taxonomy.categories.map(category => category.id));
-    records.forEach(record => validatePolicyRecord(record, { domains, categories, allowSynthetic, supportedVersions }));
+    const approvedSourceUrls = new Set(manifest.sources.map(source => source.url));
+    records.forEach(record => validatePolicyRecord(record, {
+      domains,
+      categories,
+      allowSynthetic,
+      supportedVersions,
+      approvedSourceUrls: requireReviewed ? approvedSourceUrls : undefined,
+      requireReviewed
+    }));
     for (const supportedVersion of supportedVersions) {
       assertUniquePolicyIds(records.filter(record => record.version === supportedVersion));
     }
@@ -117,14 +125,17 @@ class PolicyRepository {
 }
 
 function loadRecords(rootDir, domains) {
-  return domains.flatMap(domain => jsonFiles(path.join(rootDir, domain)).map(readJson));
+  return domains.flatMap(domain => jsonFiles(path.join(rootDir, domain)).flatMap(file => {
+    const value = readJson(file);
+    return Array.isArray(value) ? value : [value];
+  }));
 }
 
 function loadPolicySet({ rootDir = DEFAULT_POLICY_ROOT, version } = {}) {
   const manifest = readJson(path.join(rootDir, 'manifest.json'));
   const taxonomy = readJson(path.join(rootDir, 'taxonomy.json'));
   const records = loadRecords(rootDir, manifest.domains || []);
-  const repository = new PolicyRepository({ manifest, taxonomy, records, version, allowSynthetic: false });
+  const repository = new PolicyRepository({ manifest, taxonomy, records, version, allowSynthetic: false, requireReviewed: true });
   if (repository.version === manifest.policySetVersion && repository.records.length !== manifest.ruleCount) {
     throw new PolicyValidationError(`Manifest ruleCount ${manifest.ruleCount} does not match loaded rules ${repository.records.length}`);
   }

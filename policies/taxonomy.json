@@ -24,6 +24,10 @@
     { "id": "fraud", "label": "Fraud" },
     { "id": "spam", "label": "Spam" },
     { "id": "profanity", "label": "Profanity" },
-    { "id": "shocking_content", "label": "Shocking content" }
+    { "id": "shocking_content", "label": "Shocking content" },
+    { "id": "unoriginal_content", "label": "Unoriginal content" },
+    { "id": "intellectual_property", "label": "Intellectual property" },
+    { "id": "disordered_eating", "label": "Disordered eating" },
+    { "id": "animal_abuse", "label": "Animal abuse" }
   ]
 }

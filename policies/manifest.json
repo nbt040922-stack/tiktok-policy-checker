@@ -1,15 +1,24 @@
 {
   "provider": "TikTok",
-  "schemaVersion": "1.0.0",
-  "policySetVersion": "uninitialized",
-  "availableVersions": [],
-  "effectiveDate": null,
-  "lastUpdated": null,
-  "sources": [],
-  "ruleCount": 0,
-  "domains": [
-    "community_guidelines",
-    "fyp_eligibility",
-    "monetization"
-  ]
+  "schemaVersion": "1.1.0",
+  "policySetVersion": "tiktok-global-2025-h2",
+  "availableVersions": ["tiktok-global-2025-h2"],
+  "effectiveDate": "2025-09-13",
+  "lastUpdated": "2026-08-14",
+  "locale": "Global / English",
+  "sources": [
+    { "id": "overview", "title": "Overview", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/overview?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "b45d23754635d73cda93c717c296366d2acb620e594f0d29ecfea00811d3ae1a" },
+    { "id": "youth-safety", "title": "Youth Safety and Well-Being", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/youth-safety?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "d30e1fcc3aa8c54ac596e44367a5abd93f75fea7b7acb3be8ec96c1dda0e727c" },
+    { "id": "safety-civility", "title": "Safety and Civility", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/safety-civility?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "5590a92f417337f5cde4c2039c687d40ce58693c7d311af0b60c66cbc1a66d9e" },
+    { "id": "mental-behavioral-health", "title": "Mental and Behavioral Health", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/mental-behavioral-health?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "83561a380be7a00275062397a037c1ebd3a3ec7636a584867d6a3e903799ec9e" },
+    { "id": "sensitive-mature-themes", "title": "Sensitive and Mature Themes", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/sensitive-mature-themes?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "9541443a2e98f3a522cc46a80cb865d99c920962c74ceb7471bad661556f0cdf" },
+    { "id": "integrity-authenticity", "title": "Integrity and Authenticity", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/integrity-authenticity?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "fc2abd7feeeaaa052a54ff1cce3f2cb936e1db5b2876eef5d15572040d4e1801" },
+    { "id": "regulated-commercial-activities", "title": "Regulated Goods, Services, and Commercial Activities", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/regulated-commercial-activities?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "866984a5c42de39b31368369e15820174b0786aad6c80f894d4576a93dfe0fb1" },
+    { "id": "privacy-security", "title": "Privacy and Security", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/privacy-security?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "8ce91059cba6ca47ea8bbfc9ae2d0245804387196d652a307db6a684d06698b3" },
+    { "id": "fyf-standards", "title": "For You feed Eligibility Standards", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/fyf-standards?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "3fc1bc5127f60b6f5a94811b99e74a9a75b30d2781129e51853d1a3cfe6f542c" },
+    { "id": "accounts-features", "title": "Accounts and Features", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/accounts-features?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "0db33a0aebe4bc0c881f22aa5f47384ae73656a3a3c5d32d7eebd05bbe589e04" },
+    { "id": "enforcement", "title": "Enforcement", "url": "https://www.tiktok.com/safety/en/policies-and-engagement/enforcement?cgversion=2025H2update", "locale": "en", "retrievedAt": "2026-08-14T15:16:41Z", "effectiveDate": "2025-09-13", "policyRelease": "2025-08-14", "versionMarker": "2025H2update", "checksumSha256": "28f37a737bfd952a2dcd92902f42de7f4e8ca9059d83d4935189fbd0cbbeba92" }
+  ],
+  "ruleCount": 54,
+  "domains": ["community_guidelines", "fyp_eligibility", "monetization"]
 }

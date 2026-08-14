@@ -28,6 +28,16 @@
       }
     },
     "severity": { "enum": ["low", "medium", "high", "critical", "unknown"] },
+    "platformTreatment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ageRestricted", "warningScreen", "fyfEligible"],
+      "properties": {
+        "ageRestricted": { "type": ["boolean", "null"] },
+        "warningScreen": { "type": ["boolean", "null"] },
+        "fyfEligible": { "type": ["boolean", "null"] }
+      }
+    },
     "contextualAllowances": { "$ref": "#/$defs/stringArray" },
     "exceptions": { "$ref": "#/$defs/stringArray" },
     "examplesAllowed": { "$ref": "#/$defs/stringArray" },
@@ -43,11 +53,16 @@
         "section": { "type": "string", "minLength": 1 },
         "url": { "type": ["string", "null"] },
         "effectiveDate": { "type": ["string", "null"], "format": "date" },
-        "retrievedDate": { "type": ["string", "null"], "format": "date" }
+        "retrievedDate": { "type": ["string", "null"], "format": "date" },
+        "headingPath": { "$ref": "#/$defs/stringArray" },
+        "sourceChecksum": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "locale": { "type": "string", "minLength": 1 },
+        "policyRelease": { "type": "string", "minLength": 1 }
       }
     },
     "version": { "type": "string", "minLength": 1 },
-    "synthetic": { "type": "boolean" }
+    "synthetic": { "type": "boolean" },
+    "reviewStatus": { "enum": ["DRAFT", "REVIEWED"] }
   },
   "$defs": {
     "stringArray": {

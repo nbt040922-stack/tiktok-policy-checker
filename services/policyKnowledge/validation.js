@@ -1,10 +1,13 @@
 const OUTCOME_VALUES = Object.freeze(['ALLOW', 'RESTRICT', 'PROHIBIT', 'UNKNOWN']);
 const SEVERITY_VALUES = Object.freeze(['low', 'medium', 'high', 'critical', 'unknown']);
+const OFFICIAL_SOURCE_HOSTS = new Set(['www.tiktok.com', 'support.tiktok.com', 'newsroom.tiktok.com']);
 const RECORD_FIELDS = Object.freeze([
   'id', 'domain', 'category', 'subcategory', 'title', 'summary', 'ruleText', 'outcome',
   'severity', 'contextualAllowances', 'exceptions', 'examplesAllowed', 'examplesRestricted',
-  'examplesProhibited', 'keywords', 'source', 'version', 'synthetic'
+  'examplesProhibited', 'keywords', 'source', 'version', 'synthetic', 'platformTreatment',
+  'reviewStatus'
 ]);
+const REQUIRED_RECORD_FIELDS = Object.freeze(RECORD_FIELDS.filter(field => !['platformTreatment', 'reviewStatus'].includes(field)));
 
 class PolicyValidationError extends Error {
   constructor(message, details = []) {
@@ -48,6 +51,19 @@ function validateManifest(manifest) {
   if (!Array.isArray(manifest.domains) || !manifest.domains.length) fail('manifest.domains must be a non-empty array');
   if (new Set(manifest.domains).size !== manifest.domains.length) fail('manifest.domains must not contain duplicates');
   if (!Array.isArray(manifest.sources)) fail('manifest.sources must be an array');
+  if ('locale' in manifest) requireString(manifest.locale, 'manifest.locale');
+  for (const [index, source] of manifest.sources.entries()) {
+    if (!isObject(source)) fail(`manifest.sources[${index}] must be an object`);
+    for (const field of ['id', 'title', 'url', 'locale', 'retrievedAt', 'policyRelease', 'versionMarker', 'checksumSha256']) {
+      requireString(source[field], `manifest.sources[${index}].${field}`);
+    }
+    let sourceUrl;
+    try { sourceUrl = new URL(source.url); } catch (_) { fail(`Invalid manifest source URL: ${source.url}`); }
+    if (sourceUrl.protocol !== 'https:' || !OFFICIAL_SOURCE_HOSTS.has(sourceUrl.hostname)) fail(`Unapproved manifest source URL: ${source.url}`);
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(source.retrievedAt)) fail(`Invalid source retrieval timestamp: ${source.retrievedAt}`);
+    if (!/^[a-f0-9]{64}$/.test(source.checksumSha256)) fail(`Invalid source checksum: ${source.checksumSha256}`);
+    validateDate(source.effectiveDate, `manifest.sources[${index}].effectiveDate`);
+  }
   if (!Number.isInteger(manifest.ruleCount) || manifest.ruleCount < 0) fail('manifest.ruleCount must be a non-negative integer');
   validateDate(manifest.effectiveDate, 'manifest.effectiveDate');
   validateDate(manifest.lastUpdated, 'manifest.lastUpdated');
@@ -69,9 +85,9 @@ function validateTaxonomy(taxonomy) {
   return taxonomy;
 }
 
-function validatePolicyRecord(record, { domains, categories, allowSynthetic = false, supportedVersions } = {}) {
+function validatePolicyRecord(record, { domains, categories, allowSynthetic = false, supportedVersions, approvedSourceUrls, requireReviewed = false } = {}) {
   if (!isObject(record)) fail('Policy record must be an object');
-  const missing = RECORD_FIELDS.filter(field => !(field in record));
+  const missing = REQUIRED_RECORD_FIELDS.filter(field => !(field in record));
   if (missing.length) fail(`Policy record is missing required fields: ${missing.join(', ')}`, missing);
   const unknown = Object.keys(record).filter(field => !RECORD_FIELDS.includes(field));
   if (unknown.length) fail(`Policy record has unsupported fields: ${unknown.join(', ')}`, unknown);
@@ -95,15 +111,30 @@ function validatePolicyRecord(record, { domains, categories, allowSynthetic = fa
   const unknownOutcomes = Object.keys(record.outcome).filter(field => !outcomeFields.includes(field));
   if (unknownOutcomes.length) fail(`Unsupported outcome fields: ${unknownOutcomes.join(', ')}`);
   if (!SEVERITY_VALUES.includes(record.severity)) fail(`Invalid policy severity: ${record.severity}`);
+  if ('platformTreatment' in record) {
+    if (!isObject(record.platformTreatment)) fail('policy.platformTreatment must be an object');
+    const treatmentFields = ['ageRestricted', 'warningScreen', 'fyfEligible'];
+    for (const field of treatmentFields) {
+      if (record.platformTreatment[field] !== null && typeof record.platformTreatment[field] !== 'boolean') {
+        fail(`policy.platformTreatment.${field} must be boolean or null`);
+      }
+    }
+    const unknownTreatments = Object.keys(record.platformTreatment).filter(field => !treatmentFields.includes(field));
+    if (unknownTreatments.length) fail(`Unsupported platform treatment fields: ${unknownTreatments.join(', ')}`);
+  }
+  if ('reviewStatus' in record && !['DRAFT', 'REVIEWED'].includes(record.reviewStatus)) fail(`Invalid review status: ${record.reviewStatus}`);
+  if (requireReviewed && record.reviewStatus !== 'REVIEWED') fail(`Production policy is not reviewed: ${record.id}`);
+  if (requireReviewed && record.synthetic !== false) fail(`Production policy must set synthetic=false: ${record.id}`);
 
   for (const field of ['contextualAllowances', 'exceptions', 'examplesAllowed', 'examplesRestricted', 'examplesProhibited', 'keywords']) {
     validateStringArray(record[field], `policy.${field}`);
   }
 
   if (!isObject(record.source)) fail('policy.source must be an object');
-  const sourceFields = ['document', 'section', 'url', 'effectiveDate', 'retrievedDate'];
+  const sourceFields = ['document', 'section', 'url', 'effectiveDate', 'retrievedDate', 'headingPath', 'sourceChecksum', 'locale', 'policyRelease'];
   for (const field of ['document', 'section']) requireString(record.source[field], `policy.source.${field}`);
-  for (const field of sourceFields) {
+  if (requireReviewed && /^unknown$/i.test(record.source.document.trim())) fail(`Production policy has an unknown source document: ${record.id}`);
+  for (const field of ['document', 'section', 'url', 'effectiveDate', 'retrievedDate']) {
     if (!(field in record.source)) fail(`policy.source.${field} is required`);
   }
   const unknownSource = Object.keys(record.source).filter(field => !sourceFields.includes(field));
@@ -111,6 +142,12 @@ function validatePolicyRecord(record, { domains, categories, allowSynthetic = fa
   if (record.source.url !== null) {
     requireString(record.source.url, 'policy.source.url');
     try { new URL(record.source.url); } catch (_) { fail('policy.source.url must be null or a valid URL'); }
+  }
+  if (approvedSourceUrls && !approvedSourceUrls.has(record.source.url)) fail(`Policy source URL is not approved: ${record.source.url}`);
+  if ('headingPath' in record.source) validateStringArray(record.source.headingPath, 'policy.source.headingPath');
+  if ('sourceChecksum' in record.source && !/^[a-f0-9]{64}$/.test(record.source.sourceChecksum)) fail('policy.source.sourceChecksum must be SHA-256');
+  for (const field of ['locale', 'policyRelease']) {
+    if (field in record.source) requireString(record.source[field], `policy.source.${field}`);
   }
   validateDate(record.source.effectiveDate, 'policy.source.effectiveDate');
   validateDate(record.source.retrievedDate, 'policy.source.retrievedDate');
