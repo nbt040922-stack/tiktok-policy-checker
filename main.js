@@ -6,7 +6,7 @@ const { DownloadManager, JOB_STATES, PROGRESS_PREFIX, parseYtDlpProgress } = req
 const { ContentOpsBridge } = require('./contentops-bridge');
 const { YouTubeAuthSession, isAuthRequired, redactSensitive } = require('./auth-session');
 const { YouTubeIngestionService, classifyIngestionError } = require('./services/youtube');
-const { JudgmentCache, PolicyJudgeService, loadPolicyJudgeConfig } = require('./services/policyJudge');
+const { ModelFindingCache, PolicyJudgeService, loadPolicyJudgeConfig } = require('./services/policyJudge');
 const { LocalQwenProvider, PolicyJudgeError } = require('./services/policyJudge/provider');
 const { loadPolicySet } = require('./services/policyKnowledge');
 const {
@@ -475,7 +475,7 @@ app.whenReady().then(async () => {
     repository: loadPolicySet(),
     config: judgeConfig,
     provider: new LocalQwenProvider(judgeConfig),
-    cache: new JudgmentCache({ filePath: path.join(app.getPath('userData'), 'policy-judge-cache.json'), maxEntries: judgeConfig.cacheMaxEntries })
+    cache: new ModelFindingCache({ filePath: path.join(app.getPath('userData'), 'policy-judge-cache.json'), maxEntries: judgeConfig.cacheMaxEntries })
   });
   if (fs.existsSync(legacyCookiesPath)) {
     logToFile('Legacy cookies.txt retained but disabled; dedicated YouTube session is primary.');

@@ -1,95 +1,58 @@
-# Phase 4 — Local Qwen Policy Judge
+# Phase 4.1 - Local Qwen Policy Judge
 
 ## Status
 
-The local-judge integration is implemented and `qwen3:14b` was installed after explicit user authorization. Real benchmark and YouTube E2E evaluation completed without OOM, but Phase 4 remains blocked on quality and throughput. See `POLICY_ENGINE_PHASE4_QWEN_EVAL.md` for measured results.
+The calibrated local judge passes the Phase 4.1 benchmark and same-video E2E acceptance gates. Qwen3-14B Q4_K_M remains local through Ollama at `127.0.0.1`.
 
 ## Architecture
 
 ```text
-YouTube ingestion (main process)
-  -> timestamped transcript segments
-  -> deterministic no-candidate prefilter
-  -> top 5 policy candidates from tiktok-global-2025-h2
-  -> version-aware SHA-256 judgment cache
-  -> LocalQwenProvider over 127.0.0.1
-  -> strict JSON validation and conservative decision mapping
-  -> adjacent display-range merge + KEEP-only 120–180 second windows
-  -> existing renderer
+timestamped transcript
+  -> deterministic risk screen
+  -> thresholded, diverse policy retrieval
+  -> neutral PRECHECK_KEEP or local Qwen findings
+  -> deterministic policy decision engine
+  -> adjacent merge and KEEP-only 120-180 second clips
 ```
 
-The Electron renderer never loads the model. The main process owns ingestion, policy retrieval, model calls, cache, and result aggregation. The policy knowledge base remains the only policy source; Qwen receives only the current segment, one previous/next segment, and up to five candidate rules.
-
-## Runtime and model
-
-The configured runtime is the locally installed Ollama service at `http://127.0.0.1:11434`. It provides the simplest available Windows localhost boundary on this workstation. The configured model is `qwen3:14b`, reported as `Qwen3-14B`, with expected `Q4_K_M` quantization. Ollama lists the Q4_K_M artifact at approximately 9.3 GB: <https://ollama.com/library/qwen3/tags>.
-
-Qwen runs in non-thinking mode through both `/no_think` in the system prompt and `think: false` in the local request. Qwen documents `/no_think` as its dynamic non-thinking control: <https://qwenlm.github.io/blog/qwen3/>.
-
-## Explicit installation
-
-Installation is a separate user action:
-
-```powershell
-ollama pull qwen3:14b
-ollama serve
-```
-
-The application itself never runs `ollama pull`. The model used for evaluation was installed as a separate, explicitly authorized operator action. Before YouTube ingestion the app checks `/api/tags`; if the service or model is absent, analysis fails immediately with `Qwen Policy Judge is not running` or `Local model qwen3:14b is not installed`.
+The renderer never loads the model. The main process owns ingestion, retrieval, local inference, caching, mapping, and aggregation. The application never downloads the model.
 
 ## Configuration
 
-Defaults live in `config/policy-judge.json`. Workstation paths are not hardcoded. Supported environment overrides:
+Defaults are in `config/policy-judge.json`. The provider permits loopback hosts only. Environment overrides are `QWEN_SERVER_URL`, `QWEN_MODEL`, and `QWEN_QUANTIZATION`. Default candidate count is five, retrieval minimum score is five, and concurrency is one.
 
-```text
-QWEN_SERVER_URL=http://127.0.0.1:11434
-QWEN_MODEL=qwen3:14b
-QWEN_QUANTIZATION=Q4_K_M
-```
+## Prompt and findings
 
-The provider rejects non-loopback hosts. Candidate count is constrained to 3–8 and concurrency to 1–2; defaults are 5 and 1. Starting thresholds are engineering configuration, not TikTok thresholds: KEEP 0.80, REMOVE 0.85, otherwise REVIEW.
+Prompt version: `qwen-policy-findings-v2`.
 
-## Prompt and output
+Qwen returns grounded findings, not KEEP/REVIEW/REMOVE. Each finding must reference a supplied policy ID and use the strict schema. The provider rejects unknown IDs, invalid enums/confidence, extra fields, and invented policy facts. The canonical policy treatment is copied from the repository candidate rather than trusted from model output.
 
-Prompt version: `qwen-policy-judge-v1`.
+The prompt makes topic mention distinct from policy applicability and allows empty findings for reporting, quotation, debunking, prevention, and other non-applicable context. Non-thinking mode uses `/no_think` and `think: false`.
 
-The grounding prompt forbids remembered policy, invented IDs/exceptions, unsupported monetization inference, hidden reasoning output, and claims about unseen visuals. Ollama receives a JSON Schema, and the application independently rejects missing/extra fields, invalid enums, invalid confidence, unknown categories, and policy IDs outside the candidate set.
+## Deterministic decision semantics
 
-Timeout is 60 seconds. Invalid JSON and temporary local HTTP errors retry once. Timeout, repeated invalid output, and ambiguous treatment become REVIEW rather than crashing the video.
-
-## Decision semantics
-
-- REMOVE requires supported prohibited postability and confidence at or above the REMOVE threshold.
-- REVIEW covers low confidence, age restriction, FYF prohibition, conflicting/incomplete context, requested visual evidence, and unsupported REMOVE output.
-- KEEP requires supported allowed postability, no strong FYF restriction, and confidence at or above the KEEP threshold.
-- `KEEP_PRECHECK` applies only when deterministic retrieval finds no policy signal; outcome fields remain UNKNOWN.
+- REMOVE requires an applicable prohibited rule at or above the configured remove threshold without a supported exception.
+- REVIEW covers visual evidence, insufficient or conflicting context, age restriction, FYF prohibition, unknown/restricted postability, or intermediate confidence.
+- KEEP requires no unresolved restrictive finding.
+- PRECHECK_KEEP is used only when the risk screen is neutral and retrieval has no qualifying candidate.
+- A public-interest allowance applies only when that policy was actually retrieved and the content has supported controlled reporting/educational context.
 
 KEEP never guarantees monetization.
 
-## Transcript-only limitation
+## Retrieval and prefilter
 
-The judge does not inspect frames, OCR, blood, nudity, visually shown weapons, or visual graphicness. Qwen must return `requiresVisualReview: true` with REVIEW when the decision needs visual evidence.
+Retrieval scores exact phrases and specific policy terms more strongly than generic words, requires a score of five, and returns at most two candidates per category. Broad metadata overlap no longer creates candidates. Public-interest candidates are available only in supported benign context. The risk screen guards risky current and neighboring segments from being bypassed when retrieval is empty.
 
 ## Cache and metrics
 
-The persistent cache stores input hashes and validated results, not transcript text. Keys include policy version, model ID, quantization, sampling settings, prompt version, segment/context text, and candidate IDs. Any relevant version/config change produces a new key.
+Cache format v2 stores validated model findings, not final decisions or transcript text. Decision thresholds are applied again on every cache hit, so changing thresholds remaps existing findings without another model call. Prompt, model, policy, sampling, text/context, and candidate changes invalidate the key. Version 1 final-verdict entries are ignored.
 
-Metrics log only counts/timing/usage, not transcript content: total segments, prefiltered segments, Qwen calls, cache hits, mean/p50/p95 latency, prompt/generated tokens when reported, and total analysis time.
+Metrics distinguish `PRECHECK_KEEP`, `QWEN_JUDGED`, `MODEL_FAILURE_REVIEW`, `VISUAL_REVIEW`, `POLICY_REVIEW`, and `REMOVE`, and report actual Qwen calls, cache hits, timing, and token usage.
 
-## Cancellation and UI
+## Failure and transcript-only behavior
 
-A new analysis aborts the previous model request, subtitle fetch, and active yt-dlp metadata subprocess. Existing renderer request guards still prevent stale UI writes. The UI remains structurally unchanged; Risky Sections now includes REVIEW and REMOVE, short reason, and policy IDs.
+Timeout, repeated invalid output, missing relevant policy for a risky segment, and local service failure resolve conservatively to REVIEW without crashing analysis. The judge cannot inspect frames, OCR, blood, nudity, weapons, or visual graphicness; decisions that depend on unseen imagery remain REVIEW.
 
-## Offline behavior
+## Evaluation
 
-After Ollama, the model, application, and policy set are installed, policy judgment uses localhost only and requires no Internet. YouTube ingestion still requires network access.
-
-## Benchmark
-
-Run after explicit model installation and sufficient free VRAM:
-
-```powershell
-npm run benchmark:qwen
-```
-
-The runner uses 12 short synthetic, human-labeled examples and reports agreement, false KEEP, false REMOVE, REVIEW rate, timings, token counts, and GPU memory samples. Expectations describe this engine's desired behavior, not official TikTok moderation outcomes. The 2026-08-14 run completed at 50% agreement with one false KEEP, one false REMOVE, and one cold-start timeout; these results require calibration before Phase 4 can pass.
+Run `npm run benchmark:qwen`. The final 40-case benchmark reached 100% agreement, zero false KEEP, and 100% neutral bypass. Detailed baseline and same-video results are in `POLICY_ENGINE_PHASE4_QWEN_EVAL.md`.

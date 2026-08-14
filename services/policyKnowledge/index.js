@@ -40,6 +40,60 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+const GENERIC_TERMS = new Set(['allow', 'content', 'context', 'discussion', 'harm', 'information', 'policy', 'show', 'use', 'video']);
+const BENIGN_CONTEXT_TERMS = ['documentary', 'educational', 'education', 'medical', 'news', 'report', 'discuss', 'explain', 'quote', 'prevention', 'recovery', 'criticism', 'condemn', 'debunk', 'counterspeech', 'satire', 'history', 'historical', 'public interest'];
+
+function scorePolicy(record, { text = '', categories = [] } = {}) {
+  const normalizedInput = normalizeText(text);
+  const contains = phrase => ` ${normalizedInput} `.includes(` ${normalizeText(phrase)} `);
+  const inputTerms = new Set(normalizedInput.split(' ').filter(Boolean));
+  const requestedCategories = new Set(categories);
+  const matchedKeywords = record.keywords.filter(contains);
+  const benignContext = BENIGN_CONTEXT_TERMS.some(term => normalizedInput.includes(term));
+  if (record.id === 'TT25_CG_PUBLIC_INTEREST_001' && !benignContext) {
+    return { score: 0, matchedKeywords: [], metadataMatches: [], benignContext, contextual: false };
+  }
+  let score = matchedKeywords.reduce((total, keyword) => {
+    const normalized = normalizeText(keyword);
+    return total + (normalized.includes(' ') ? 8 : GENERIC_TERMS.has(normalized) ? 1 : 4);
+  }, 0);
+  const subcategory = normalizeText(record.subcategory.replace(/_/g, ' '));
+  if (subcategory.includes(' ') && contains(subcategory)) score += 6;
+  const category = normalizeText(record.category.replace(/_/g, ' '));
+  if (contains(category)) score += 5;
+  if (requestedCategories.has(record.category)) score += 6;
+
+  const categoryTerms = new Set(category.split(' '));
+  const metadataTerms = normalizeText(`${record.title} ${record.summary}`)
+    .split(' ')
+    .filter(term => term.length > 3 && !GENERIC_TERMS.has(term) && !categoryTerms.has(term));
+  const metadataMatches = [...new Set(metadataTerms.filter(term => inputTerms.has(term)))];
+  const matchedAllowances = record.contextualAllowances.filter(contains);
+  const recoveryContext = /recovery|prevention/.test(record.subcategory)
+    && ['seek help', 'warning signs', 'prevention', 'recovery'].some(contains);
+  const contextual = benignContext && requestedCategories.has(record.category)
+    && (matchedKeywords.length || matchedAllowances.length || recoveryContext || normalizedInput.includes(subcategory))
+    && (record.contextualAllowances.length || /context|recovery|prevention/.test(record.subcategory));
+  if (contextual) score += 6;
+  if (benignContext && record.outcome.postability === 'PROHIBIT') score = Math.max(0, score - 2);
+  if (record.id === 'TT25_CG_PUBLIC_INTEREST_001' && benignContext && requestedCategories.size) score += 7;
+  return { score, matchedKeywords, metadataMatches, benignContext, contextual };
+}
+
+function diverseCandidates(candidates, maxResults) {
+  const selected = [];
+  const categoryCounts = new Map();
+  for (const candidate of candidates) {
+    const count = categoryCounts.get(candidate.policy.category) || 0;
+    if (count >= 2 && candidate.policy.id !== 'TT25_CG_PUBLIC_INTEREST_001') continue;
+    if (count >= 1 && !candidate.matchedKeywords.length && !candidate.contextual && candidate.policy.id !== 'TT25_CG_PUBLIC_INTEREST_001') continue;
+    selected.push(candidate);
+    categoryCounts.set(candidate.policy.category, count + 1);
+    if (selected.length === maxResults) break;
+  }
+  return selected;
+}
+
 class PolicyRepository {
   constructor({ manifest, taxonomy, records, version, allowSynthetic = false, requireReviewed = false }) {
     validateManifest(manifest);
@@ -98,7 +152,7 @@ class PolicyRepository {
       .map(match => clone(match.record));
   }
 
-  getCandidatePolicies({ text = '', categories = [], maxResults = 10 } = {}) {
+  getCandidatePolicies({ text = '', categories = [], maxResults = 10, minScore = 1 } = {}) {
     if (!Number.isInteger(maxResults) || maxResults < 1 || maxResults > 100) {
       throw new PolicyValidationError('maxResults must be an integer from 1 to 100');
     }
@@ -106,21 +160,16 @@ class PolicyRepository {
     for (const category of categories) {
       if (!knownCategories.has(category)) throw new PolicyValidationError(`Unsupported policy category: ${category}`);
     }
-    const normalizedInput = normalizeText(text);
-    const inputTerms = new Set(normalizedInput.split(' ').filter(Boolean));
-    const requestedCategories = new Set(categories);
-    return this.records
+    if (!Number.isFinite(minScore) || minScore < 0) throw new PolicyValidationError('minScore must be a non-negative number');
+    const ranked = this.records
       .map(record => {
-        const matchedKeywords = record.keywords.filter(keyword => normalizedInput.includes(normalizeText(keyword)));
-        const metadataTerms = normalizeText(`${record.title} ${record.summary} ${record.subcategory}`).split(' ');
-        const metadataMatches = metadataTerms.filter(term => inputTerms.has(term)).length;
-        const score = matchedKeywords.length * 4 + metadataMatches + (requestedCategories.has(record.category) ? 10 : 0);
-        return { policy: record, score, matchedKeywords };
+        const scored = scorePolicy(record, { text, categories });
+        return { policy: record, ...scored };
       })
-      .filter(candidate => candidate.score > 0)
-      .sort((a, b) => b.score - a.score || a.policy.id.localeCompare(b.policy.id))
-      .slice(0, maxResults)
-      .map(candidate => ({ ...clone(candidate.policy), matchScore: candidate.score, matchedKeywords: candidate.matchedKeywords }));
+      .filter(candidate => candidate.score >= minScore)
+      .sort((a, b) => b.score - a.score || Number(b.contextual) - Number(a.contextual) || a.policy.id.localeCompare(b.policy.id));
+    return diverseCandidates(ranked, maxResults)
+      .map(candidate => ({ ...clone(candidate.policy), matchScore: candidate.score, matchedKeywords: candidate.matchedKeywords, matchReasons: { metadata: candidate.metadataMatches, benignContext: candidate.benignContext, contextual: candidate.contextual } }));
   }
 }
 
@@ -171,5 +220,6 @@ module.exports = {
   loadPolicySet,
   loadSyntheticFixtures,
   normalizeText,
+  scorePolicy,
   searchPolicies: query => active().searchPolicies(query)
 };

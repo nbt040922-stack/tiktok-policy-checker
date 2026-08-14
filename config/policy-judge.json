@@ -10,7 +10,7 @@
     "maxOutputTokens": 500,
     "candidatePolicies": 5,
     "contextSegments": 1,
-    "preFilterMinScore": 1,
+    "candidateMinScore": 5,
     "keepConfidence": 0.8,
     "removeConfidence": 0.85,
     "timeoutMs": 60000,

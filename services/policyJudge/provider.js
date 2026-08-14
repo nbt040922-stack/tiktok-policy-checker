@@ -1,35 +1,55 @@
-const POLICY_JUDGE_PROMPT_VERSION = 'qwen-policy-judge-v1';
-const DECISIONS = Object.freeze(['KEEP', 'REVIEW', 'REMOVE']);
+const POLICY_JUDGE_PROMPT_VERSION = 'qwen-policy-findings-v2';
 const OUTCOMES = Object.freeze(['ALLOW', 'RESTRICT', 'PROHIBIT', 'UNKNOWN']);
+const CONTEXT_LABELS = Object.freeze([
+  'neutral', 'discussion', 'news_reporting', 'documentary', 'educational', 'medical', 'prevention', 'recovery',
+  'quotation', 'criticism', 'counterspeech', 'satire', 'artistic', 'promotion', 'instruction', 'glorification',
+  'targeted_attack', 'unclear'
+]);
 
-const JUDGMENT_SCHEMA = Object.freeze({
-  type: 'object',
-  additionalProperties: false,
-  required: ['decision', 'confidence', 'postability', 'fypEligibility', 'monetization', 'ageRestricted', 'categories', 'policyIds', 'reason', 'contextType', 'requiresVisualReview'],
+const TREATMENT_SCHEMA = Object.freeze({
+  type: 'object', additionalProperties: false,
+  required: ['postability', 'fypEligibility', 'monetization'],
   properties: {
-    decision: { enum: DECISIONS },
-    confidence: { type: 'number', minimum: 0, maximum: 1 },
-    postability: { enum: OUTCOMES },
-    fypEligibility: { enum: OUTCOMES },
-    monetization: { enum: OUTCOMES },
-    ageRestricted: { type: ['boolean', 'null'] },
-    categories: { type: 'array', items: { type: 'string' }, uniqueItems: true },
-    policyIds: { type: 'array', items: { type: 'string' }, uniqueItems: true },
-    reason: { type: 'string', minLength: 1 },
-    contextType: { type: 'string', minLength: 1 },
-    requiresVisualReview: { type: 'boolean' }
+    postability: { enum: OUTCOMES }, fypEligibility: { enum: OUTCOMES }, monetization: { enum: OUTCOMES }
+  }
+});
+
+const FINDINGS_SCHEMA = Object.freeze({
+  type: 'object', additionalProperties: false,
+  required: ['findings', 'overallContext', 'contextConfidence', 'requiresVisualReview', 'insufficientEvidence'],
+  properties: {
+    findings: {
+      type: 'array',
+      items: {
+        type: 'object', additionalProperties: false,
+        required: ['policyId', 'applies', 'applicabilityConfidence', 'treatment', 'context', 'exceptionApplies', 'requiresVisualReview', 'reason'],
+        properties: {
+          policyId: { type: 'string' }, applies: { type: 'boolean' },
+          applicabilityConfidence: { type: 'number', minimum: 0, maximum: 1 },
+          treatment: TREATMENT_SCHEMA, context: { enum: CONTEXT_LABELS },
+          exceptionApplies: { type: 'boolean' }, requiresVisualReview: { type: 'boolean' },
+          reason: { type: 'string', minLength: 1 }
+        }
+      }
+    },
+    overallContext: { enum: CONTEXT_LABELS },
+    contextConfidence: { type: 'number', minimum: 0, maximum: 1 },
+    requiresVisualReview: { type: 'boolean' }, insufficientEvidence: { type: 'boolean' }
   }
 });
 
 const SYSTEM_PROMPT = `/no_think
-You are a transcript-only TikTok policy judge. Use only the supplied candidate policy records.
-You are not allowed to rely on remembered TikTok policy.
-If supplied policies do not support a conclusion, return REVIEW.
-Do not invent policy IDs or exceptions.
-Do not infer monetization restrictions unless supplied policy evidence supports them.
-Distinguish reporting, quotation, prevention, condemnation, documentary, educational, and artistic context from promotion or instruction.
-Do not claim visual evidence from transcript text. If visual evidence is needed, return REVIEW with requiresVisualReview=true.
-Return exactly one concise JSON object matching the supplied schema. Do not output reasoning or prose outside JSON.`;
+You identify policy findings from transcript text. You do not make KEEP, REVIEW, or REMOVE decisions.
+Use only the supplied candidate policy records. Never rely on remembered TikTok policy.
+A topic mention is not a policy violation. Set applies=true only when the described behavior matches the supplied rule.
+Reporting, quotation, prevention, recovery, criticism, counterspeech, documentary, educational, medical, satire, and artistic context are not promotion or instruction.
+For misinformation, hate, threat, or harassment rules, set applies=false when the transcript only reports, quotes, condemns, or debunks the claim or conduct instead of endorsing it.
+If the context is clear and no supplied policy applies, return an empty findings array with insufficientEvidence=false.
+Do not use insufficientEvidence merely because no rule applies.
+Copy treatment exactly from the matching supplied policy. Do not invent policy IDs, outcomes, or exceptions.
+Set exceptionApplies=true only when a supplied allowance or exception clearly matches the transcript context.
+Do not claim visual evidence. Set requiresVisualReview=true only when policy applicability materially depends on unseen imagery.
+Return exactly one concise JSON object matching the schema. No final verdict, hidden reasoning, or prose outside JSON.`;
 
 class PolicyJudgeError extends Error {
   constructor(code, message) {
@@ -56,31 +76,41 @@ function parseJsonObject(value) {
   }
 }
 
-function validateJudgment(value, { candidatePolicyIds = [], knownCategories = [] } = {}) {
-  const judgment = parseJsonObject(value);
-  const allowedFields = Object.keys(JUDGMENT_SCHEMA.properties);
-  const missing = JUDGMENT_SCHEMA.required.filter(field => !(field in judgment));
-  const extra = Object.keys(judgment).filter(field => !allowedFields.includes(field));
-  if (missing.length || extra.length) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', `Judgment schema mismatch: ${[...missing, ...extra].join(', ')}`);
-  if (!DECISIONS.includes(judgment.decision)) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid decision.');
-  if (!Number.isFinite(judgment.confidence) || judgment.confidence < 0 || judgment.confidence > 1) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid confidence.');
-  for (const field of ['postability', 'fypEligibility', 'monetization']) {
-    if (!OUTCOMES.includes(judgment[field])) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', `Invalid ${field}.`);
+function exactFields(value, required, label) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', `Invalid ${label}.`);
+  const missing = required.filter(field => !(field in value));
+  const extra = Object.keys(value).filter(field => !required.includes(field));
+  if (missing.length || extra.length) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', `${label} schema mismatch: ${[...missing, ...extra].join(', ')}`);
+}
+
+function validateFindings(value, { candidatePolicies = [] } = {}) {
+  const output = parseJsonObject(value);
+  const topFields = FINDINGS_SCHEMA.required;
+  exactFields(output, topFields, 'Findings');
+  if (!Array.isArray(output.findings)) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid findings.');
+  if (!CONTEXT_LABELS.includes(output.overallContext) || !Number.isFinite(output.contextConfidence) || output.contextConfidence < 0 || output.contextConfidence > 1) {
+    throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid overall context.');
   }
-  if (judgment.ageRestricted !== null && typeof judgment.ageRestricted !== 'boolean') throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid ageRestricted.');
-  if (typeof judgment.requiresVisualReview !== 'boolean' || typeof judgment.reason !== 'string' || !judgment.reason.trim() || typeof judgment.contextType !== 'string' || !judgment.contextType.trim()) {
-    throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid judgment details.');
-  }
-  for (const field of ['categories', 'policyIds']) {
-    if (!Array.isArray(judgment[field]) || judgment[field].some(item => typeof item !== 'string') || new Set(judgment[field]).size !== judgment[field].length) {
-      throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', `Invalid ${field}.`);
+  if (typeof output.requiresVisualReview !== 'boolean' || typeof output.insufficientEvidence !== 'boolean') throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid findings flags.');
+  const policies = new Map(candidatePolicies.map(policy => [policy.id, policy]));
+  const seen = new Set();
+  const findingFields = FINDINGS_SCHEMA.properties.findings.items.required;
+  for (const finding of output.findings) {
+    exactFields(finding, findingFields, 'Finding');
+    const policy = policies.get(finding.policyId);
+    if (!policy) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Qwen returned an unknown policy ID.');
+    if (seen.has(finding.policyId)) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Qwen returned a duplicate policy ID.');
+    seen.add(finding.policyId);
+    if (typeof finding.applies !== 'boolean' || !Number.isFinite(finding.applicabilityConfidence) || finding.applicabilityConfidence < 0 || finding.applicabilityConfidence > 1) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid finding applicability.');
+    if (!CONTEXT_LABELS.includes(finding.context) || typeof finding.exceptionApplies !== 'boolean' || typeof finding.requiresVisualReview !== 'boolean' || typeof finding.reason !== 'string' || !finding.reason.trim()) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid finding details.');
+    exactFields(finding.treatment, TREATMENT_SCHEMA.required, 'Treatment');
+    for (const field of TREATMENT_SCHEMA.required) {
+      if (!OUTCOMES.includes(finding.treatment[field])) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Invalid finding treatment.');
+      finding.treatment[field] = policy.outcome[field];
     }
+    if (finding.exceptionApplies && !(policy.contextualAllowances?.length || policy.exceptions?.length)) finding.exceptionApplies = false;
   }
-  const allowedIds = new Set(candidatePolicyIds);
-  const allowedCategories = new Set(knownCategories);
-  if (judgment.policyIds.some(id => !allowedIds.has(id))) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Qwen returned an unknown policy ID.');
-  if (judgment.categories.some(category => !allowedCategories.has(category))) throw new PolicyJudgeError('MODEL_OUTPUT_INVALID', 'Qwen returned an unknown category.');
-  return judgment;
+  return output;
 }
 
 function buildPrompt(input) {
@@ -88,12 +118,7 @@ function buildPrompt(input) {
     policySet: input.policySet,
     segment: input.segment,
     context: input.context,
-    candidatePolicies: input.candidatePolicies,
-    decisionSemantics: {
-      REMOVE: 'Clear prohibited postability supported by supplied policy.',
-      REVIEW: 'Ambiguous, restricted, FYF-ineligible, low-confidence, conflicting, incomplete, or needs visual review.',
-      KEEP: 'Clearly allowed, no strong FYF restriction, no unresolved high-risk policy.'
-    }
+    candidatePolicies: input.candidatePolicies
   });
 }
 
@@ -135,10 +160,8 @@ class LocalQwenProvider extends PolicyJudgeProvider {
 
   async getModelInfo() {
     return {
-      provider: 'local-qwen',
-      model: this.config.modelDisplayName || this.config.model,
-      modelId: this.config.model,
-      quantization: this.detectedModel?.details?.quantization_level || this.config.quantization
+      provider: 'local-qwen', model: this.config.modelDisplayName || this.config.model,
+      modelId: this.config.model, quantization: this.detectedModel?.details?.quantization_level || this.config.quantization
     };
   }
 
@@ -150,21 +173,15 @@ class LocalQwenProvider extends PolicyJudgeProvider {
         const response = await this.fetch(`${this.baseUrl}/api/chat`, {
           method: 'POST', signal: linked.signal, headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
-            model: this.config.model,
-            stream: false,
-            think: false,
-            format: JUDGMENT_SCHEMA,
+            model: this.config.model, stream: false, think: false, format: FINDINGS_SCHEMA,
             messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: buildPrompt(input) }],
             options: { temperature: this.config.temperature, top_p: this.config.topP, num_predict: this.config.maxOutputTokens }
           })
         });
         if (!response.ok) throw new PolicyJudgeError(response.status >= 500 ? 'MODEL_HTTP_TEMPORARY' : 'MODEL_HTTP_ERROR', `Local Qwen returned HTTP ${response.status}.`);
         const payload = await response.json();
-        const judgment = validateJudgment(payload.message?.content, {
-          candidatePolicyIds: input.candidatePolicies.map(policy => policy.id),
-          knownCategories: input.knownCategories
-        });
-        return { ...judgment, usage: { promptTokens: payload.prompt_eval_count ?? null, generatedTokens: payload.eval_count ?? null } };
+        const findings = validateFindings(payload.message?.content, { candidatePolicies: input.candidatePolicies });
+        return { ...findings, usage: { promptTokens: payload.prompt_eval_count ?? null, generatedTokens: payload.eval_count ?? null } };
       } catch (error) {
         if (linked.signal.aborted) {
           if (signal?.aborted) throw new PolicyJudgeError('ANALYSIS_CANCELLED', 'Analysis was cancelled.');
@@ -181,14 +198,6 @@ class LocalQwenProvider extends PolicyJudgeProvider {
 }
 
 module.exports = {
-  JUDGMENT_SCHEMA,
-  LocalQwenProvider,
-  OUTCOMES,
-  POLICY_JUDGE_PROMPT_VERSION,
-  PolicyJudgeError,
-  PolicyJudgeProvider,
-  SYSTEM_PROMPT,
-  buildPrompt,
-  parseJsonObject,
-  validateJudgment
+  CONTEXT_LABELS, FINDINGS_SCHEMA, LocalQwenProvider, OUTCOMES, POLICY_JUDGE_PROMPT_VERSION,
+  PolicyJudgeError, PolicyJudgeProvider, SYSTEM_PROMPT, buildPrompt, parseJsonObject, validateFindings
 };
