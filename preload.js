@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   loginYouTube: () => ipcRenderer.invoke('login-youtube'),
   logoutYouTube: () => ipcRenderer.invoke('logout-youtube'),
   getAuthState: () => ipcRenderer.invoke('get-auth-state'),
+  analyzeYouTubeVideo: (url, requestId) => ipcRenderer.invoke('analyze-youtube-video', { url, requestId }),
 
   // Download Engine
   getPlaylistData: (url) => ipcRenderer.invoke('get-playlist-data', url),
@@ -35,5 +36,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Listeners
   onDownloadJobsUpdated: (callback) => ipcRenderer.on('download-jobs-updated', (event, data) => callback(data)),
   onEngineStatusUpdated: (callback) => ipcRenderer.on('engine-status-updated', (event, data) => callback(data)),
-  onAuthStateUpdated: (callback) => ipcRenderer.on('auth-state-updated', (event, data) => callback(data))
+  onAuthStateUpdated: (callback) => ipcRenderer.on('auth-state-updated', (event, data) => callback(data)),
+  onAnalysisStage: (callback) => {
+    const listener = (event, data) => callback(data);
+    ipcRenderer.on('analysis-stage', listener);
+    return () => ipcRenderer.removeListener('analysis-stage', listener);
+  }
 });

@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const { DownloadManager, JOB_STATES, PROGRESS_PREFIX, parseYtDlpProgress } = require('./download-manager');
 const { ContentOpsBridge } = require('./contentops-bridge');
 const { YouTubeAuthSession, isAuthRequired, redactSensitive } = require('./auth-session');
+const { YouTubeIngestionService, classifyIngestionError } = require('./services/youtube');
 const {
   FINAL_PATH_PREFIX,
   bootstrapRuntime,
@@ -27,7 +28,9 @@ let latestDiagnostics = null;
 let updateInFlight = null;
 let downloadManager = null;
 let youtubeAuth = null;
+let youtubeIngestion = null;
 let contentOpsBridge = null;
+const latestAnalysisRequests = new Map();
 const MAX_CONCURRENT_DOWNLOADS = 2;
 
 // Dynamic Binary Path Resolver
@@ -213,10 +216,9 @@ ipcMain.on('cancel-all-downloads', () => {
   downloadManager?.cancelAll('user');
 });
 
-async function fetchMetadata(url) {
+async function fetchMetadataWithCookies(url, cookiesPath) {
   if (!ensureBinaryExists(ytdlpPath)) throw new Error('yt-dlp.exe missing');
-  return youtubeAuth.withTemporaryCookies(async cookiesPath => {
-    const args = [...buildYtDlpBaseArgs({ paths: binaryPaths, cookiesPath }), '--dump-json', url];
+    const args = [...buildYtDlpBaseArgs({ paths: binaryPaths, cookiesPath }), '--no-playlist', '--skip-download', '--dump-single-json', url];
     const result = await executeWithRecovery({
       operation: () => runProcess(ytdlpPath, args, { env: spawnEnv, timeoutMs: 0 }),
       recover: performSafeUpdate,
@@ -235,8 +237,33 @@ async function fetchMetadata(url) {
       logToFile('Metadata parse failed: ' + e.message);
       throw new Error('Metadata parse error');
     }
-  });
 }
+
+async function fetchMetadata(url) {
+  return youtubeAuth.withTemporaryCookies(cookiesPath => fetchMetadataWithCookies(url, cookiesPath));
+}
+
+ipcMain.handle('analyze-youtube-video', async (event, { url, requestId }) => {
+  const senderId = event.sender.id;
+  latestAnalysisRequests.set(senderId, requestId);
+  const onStage = stage => {
+    if (latestAnalysisRequests.get(senderId) === requestId && !event.sender.isDestroyed()) {
+      event.sender.send('analysis-stage', { requestId, stage });
+    }
+  };
+  try {
+    const data = await youtubeAuth.withTemporaryCookies(cookiesPath =>
+      youtubeIngestion.ingest(url, { cookiesPath, onStage })
+    );
+    return { ok: true, data };
+  } catch (error) {
+    const safeError = classifyIngestionError(error);
+    logToFile(`YouTube ingestion failed: ${safeError.code}`);
+    return { ok: false, error: { code: safeError.code, message: safeError.message } };
+  } finally {
+    if (latestAnalysisRequests.get(senderId) === requestId) latestAnalysisRequests.delete(senderId);
+  }
+});
 
 ipcMain.handle('get-playlist-data', async (event, url) => {
   if (!ensureBinaryExists(ytdlpPath)) throw new Error('yt-dlp.exe missing');
@@ -427,6 +454,7 @@ app.whenReady().then(async () => {
     logger: record => logToFile(`Auth: ${redactSensitive(JSON.stringify(record))}`)
   });
   await youtubeAuth.initialize();
+  youtubeIngestion = new YouTubeIngestionService({ getRawMetadata: fetchMetadataWithCookies });
   if (fs.existsSync(legacyCookiesPath)) {
     logToFile('Legacy cookies.txt retained but disabled; dedicated YouTube session is primary.');
   }

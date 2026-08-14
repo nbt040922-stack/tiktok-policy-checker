@@ -189,8 +189,8 @@ test('logs and UI messages redact cookie, auth, token, and password secrets', ()
   assert.doesNotMatch(redacted, /abc=secret|auth-secret|token-secret|pw-secret/);
 });
 
-test('metadata, playlist, and download paths use the same auth helper', () => {
+test('metadata, ingestion, playlist, and download paths use the same auth helper', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
-  assert.equal((source.match(/youtubeAuth\.withTemporaryCookies/g) || []).length, 3);
+  assert.equal((source.match(/youtubeAuth\.withTemporaryCookies/g) || []).length, 4);
   assert.doesNotMatch(source, /session\.defaultSession|buildYtDlpBaseArgs\(\{[^}]*legacyCookiesPath/);
 });

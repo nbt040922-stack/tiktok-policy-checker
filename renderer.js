@@ -5,7 +5,7 @@ const engineLabel = document.getElementById('engineLabel');
 
 const analysisState = { queue: 0, analyzing: 0, checked: 0 };
 let lastUrl = '';
-let requestId = 0;
+const requestGuard = window.PolicyAnalysis.createRequestGuard();
 
 document.getElementById('winMinimize')?.addEventListener('click', () => window.electronAPI.minimizeWindow());
 document.getElementById('winMaximize')?.addEventListener('click', () => window.electronAPI.maximizeWindow());
@@ -22,9 +22,7 @@ function updateStatusBar() {
 }
 
 function formatDuration(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainder = Math.floor(seconds % 60);
-    return `${minutes}:${String(remainder).padStart(2, '0')}`;
+    return window.PolicyAnalysis.formatTimestamp(seconds);
 }
 
 function decisionBadge(decision) {
@@ -46,7 +44,7 @@ function renderAnalyzing(stage) {
         ['policy', 'Checking TikTok policies'],
         ['safe_windows', 'Finding safe segments']
     ];
-    const activeIndex = Math.max(0, stages.findIndex(([key]) => key === stage));
+    const activeIndex = stage === 'complete' ? stages.length : Math.max(0, stages.findIndex(([key]) => key === stage));
     policyResult.className = 'policy-result policy-analyzing';
     policyResult.innerHTML = `
         <div class="loading-ring" aria-hidden="true"></div>
@@ -87,11 +85,11 @@ function renderSuccess(result) {
         </section>
         <section class="result-group">
             <h2>Recommended Clips</h2>
-            <div class="glass-panel">${result.recommendedClips.map(segmentRow).join('')}</div>
+            <div class="glass-panel">${result.recommendedClips.length ? result.recommendedClips.map(segmentRow).join('') : '<p class="empty-result">No 2–3 minute safe window found.</p>'}</div>
         </section>
         <section class="result-group">
             <h2>Risky Sections</h2>
-            <div class="glass-panel">${riskySections.map(segmentRow).join('')}</div>
+            <div class="glass-panel">${riskySections.length ? riskySections.map(segmentRow).join('') : '<p class="empty-result">No REMOVE sections in this temporary analysis.</p>'}</div>
         </section>`;
 }
 
@@ -113,7 +111,7 @@ async function analyzeVideo(rawUrl = urlInput.value) {
         return;
     }
 
-    const activeRequest = ++requestId;
+    const activeRequest = requestGuard.next();
     analysisState.analyzing = 1;
     analyzeBtn.disabled = true;
     updateStatusBar();
@@ -121,15 +119,15 @@ async function analyzeVideo(rawUrl = urlInput.value) {
 
     try {
         const result = await window.PolicyAnalysis.analyzeVideo(url, stage => {
-            if (activeRequest === requestId) renderAnalyzing(stage);
+            if (requestGuard.isCurrent(activeRequest)) renderAnalyzing(stage);
         });
-        if (activeRequest !== requestId) return;
+        if (!requestGuard.isCurrent(activeRequest)) return;
         analysisState.checked += 1;
         renderSuccess(result);
     } catch (error) {
-        if (activeRequest === requestId) renderError(error.message || 'Unknown error.');
+        if (requestGuard.isCurrent(activeRequest)) renderError(error.message || 'Unknown error.');
     } finally {
-        if (activeRequest === requestId) {
+        if (requestGuard.isCurrent(activeRequest)) {
             analysisState.analyzing = 0;
             analyzeBtn.disabled = false;
             updateStatusBar();
