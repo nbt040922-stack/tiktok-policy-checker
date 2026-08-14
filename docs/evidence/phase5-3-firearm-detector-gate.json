@@ -1,0 +1,114 @@
+{
+  "generatedAt": "2026-08-15T04:23:22.1308089+07:00",
+  "status": "NO_VIABLE_FIREARM_DETECTOR",
+  "phase5_1Status": "FAIL — MODEL_GAP",
+  "phase5_2Status": "STOP — MODEL_GAP / PERFORMANCE_GAP",
+  "sourceMediaCommitted": false,
+  "productCodeChanged": false,
+  "gpu": { "name": "NVIDIA GeForce RTX 5060 Ti", "totalMiB": 16311, "driver": "610.88" },
+  "evaluation": {
+    "thresholds": [0.2, 0.3, 0.4, 0.5, 0.6],
+    "validLocalization": "weapon-class label, IoU >= 0.10 with manually reviewed object region, predicted area <= 4x region area",
+    "requiredCases": ["bodycam-660", "glock-113"],
+    "positiveSequence": ["bodycam-650", "bodycam-655", "bodycam-660", "bodycam-665", "glock-112", "glock-113", "glock-114", "glock-122"],
+    "negativeControls": ["microphone", "phone", "seattle-clean", "swimming", "glock-clean", "nasa-action", "crowd"]
+  },
+  "candidateReview": [
+    { "name": "Dricz/gun-obj-detection", "revision": "5446cc6236e4287ac05274fe95c1e5c23a64ec32", "license": "Apache-2.0", "architecture": "DETR ResNet-50", "framework": "Transformers", "classes": ["rifle", "pistol", "grenade", "knife"], "trainingDataset": "gun-object-detection; details absent", "input": { "shortestEdge": 800, "longestEdge": 1333 }, "weightFormat": "safetensors", "weightBytes": 166497908, "parameters": 41608649, "decision": "BENCHMARKED" },
+    { "name": "Dricz/gun-obj-detection-3", "revision": "4cc19ec4424f5f985f945470da9fdd6bd8c01154", "license": "Apache-2.0", "architecture": "DETR ResNet-50", "framework": "Transformers", "classes": ["rifle", "pistol", "grenade", "knife"], "trainingDataset": "gun-object-detection; details absent", "input": { "shortestEdge": 800, "longestEdge": 1333 }, "weightFormat": "safetensors", "weightBytes": 166497908, "parameters": 41608649, "decision": "BENCHMARKED" },
+    { "name": "srikarym/CCTV-Gun", "license": "Apache-2.0 repository code; checkpoint license unstated", "architecture": "Faster R-CNN / Swin-T / Deformable DETR / DetectoRS / ConvNeXt-T", "framework": "MMDetection 2.2 / MMCV 1.7", "classes": ["Person", "Handgun"], "trainingDataset": "MGD / USRT / UCF", "input": "config-dependent; commonly 800/1333", "weightBytes": null, "decision": "LICENSE_UNKNOWN" },
+    { "name": "Subh775/Firearm_Detection_Yolov8n", "revision": "22d4dc22cfa70f5a967b9c44f27a3fa795110bc2", "license": "AGPL-3.0", "architecture": "YOLOv8n", "framework": "Ultralytics", "classes": ["Gun"], "trainingDataset": "custom approximately 7k images per model card", "input": 640, "weightBytes": null, "displayedWeightSize": "approximately 6.2 MB", "decision": "REJECTED_LICENSE" },
+    { "name": "Zcket/gun_dtct", "revision": "14270ddcff1296dbd973140c2217dd9c01ad4bd6", "license": "MIT page metadata; Ultralytics YOLOv8 dependency is AGPL-3.0", "architecture": "YOLOv8n", "framework": "Ultralytics", "classes": ["Pistols", "Grenades"], "trainingDataset": "approximately 16k images per page; provenance details absent", "input": null, "weightBytes": null, "decision": "LICENSE_CONFLICT" },
+    { "name": "Dricz/gun-obj-detection-5", "revision": "dfa403fd53031166dc949642424494b7ccc0d1ff", "license": "OpenRAIL; unclear pickled checkpoint provenance", "architecture": null, "framework": "undocumented YOLO-style pickle", "classes": null, "trainingDataset": null, "input": null, "weightBytes": null, "decision": "REJECTED_PROVENANCE" }
+  ],
+  "benchmarks": [
+    {
+      "name": "Dricz/gun-obj-detection",
+      "runtime": { "loadMs": 2832.81, "coldSingleMs": 505.8, "warmSingleMedianMs": 48.36, "batchFrames": 15, "batchMs": 602.02, "batchMeanMs": 40.13, "projected119Ms": 4776.03, "projected200Ms": 8026.93 },
+      "vram": { "systemBaselineMiB": 2525, "systemModelLoadedMiB": 2816, "systemAfterBatchMiB": 9914, "systemPostUnloadMiB": 2744, "maxAllocatedMiB": 4368.71, "maxReservedMiB": 7240.0 },
+      "positives": [
+        { "case": "bodycam-650", "top": { "class": "rifle", "confidence": 0.116856, "bbox": [192.36, 477.45, 427.0, 706.35], "validLocalization": false }, "bestValid": { "class": "rifle", "confidence": 0.114523, "bbox": [170.89, 411.3, 817.72, 710.34] } },
+        { "case": "bodycam-655", "top": { "class": "rifle", "confidence": 0.126644, "bbox": [1.29, 499.55, 60.72, 625.92], "validLocalization": false }, "bestValid": { "class": "rifle", "confidence": 0.114049, "bbox": [17.09, 469.06, 1258.84, 691.5] } },
+        { "case": "bodycam-660", "top": { "class": "rifle", "confidence": 0.149858, "bbox": [0.98, 558.88, 55.56, 660.15], "validLocalization": false }, "bestValid": null },
+        { "case": "bodycam-665", "top": { "class": "rifle", "confidence": 0.160902, "bbox": [0.86, 569.43, 49.87, 661.7], "validLocalization": false }, "bestValid": null },
+        { "case": "glock-112", "top": { "class": "pistol", "confidence": 0.123879, "bbox": [3.17, 7.84, 292.22, 266.82], "validLocalization": false }, "bestValid": null },
+        { "case": "glock-113", "top": { "class": "rifle", "confidence": 0.150814, "bbox": [975.0, 588.57, 1048.55, 718.79], "validLocalization": false }, "bestValid": null },
+        { "case": "glock-114", "top": { "class": "rifle", "confidence": 0.160284, "bbox": [6.32, 605.87, 287.25, 717.39], "validLocalization": false }, "bestValid": null },
+        { "case": "glock-122", "top": { "class": "pistol", "confidence": 0.160336, "bbox": [24.28, 229.99, 233.96, 343.81], "validLocalization": false }, "bestValid": { "class": "rifle", "confidence": 0.129149, "bbox": [77.59, 35.79, 217.89, 131.04] } }
+      ],
+      "negatives": [
+        { "case": "microphone", "class": "rifle", "confidence": 0.218521, "bbox": [67.51, 356.7, 86.3, 377.12] },
+        { "case": "phone", "class": "rifle", "confidence": 0.17948, "bbox": [1104.68, 600.87, 1179.11, 638.45] },
+        { "case": "seattle-clean", "class": "rifle", "confidence": 0.104468, "bbox": [184.4, 510.47, 403.02, 714.01] },
+        { "case": "swimming", "class": "rifle", "confidence": 0.153774, "bbox": [109.98, 297.16, 146.12, 332.48] },
+        { "case": "glock-clean", "class": "rifle", "confidence": 0.170445, "bbox": [1106.71, 619.44, 1174.14, 718.54] },
+        { "case": "nasa-action", "class": "rifle", "confidence": 0.150456, "bbox": [138.22, 530.32, 208.72, 665.44] },
+        { "case": "crowd", "class": "rifle", "confidence": 0.188203, "bbox": [196.19, 380.7, 240.02, 399.32] }
+      ],
+      "validPositiveScores": { "bodycam-650": 0.114523, "bodycam-655": 0.114049, "bodycam-660": null, "bodycam-665": null, "glock-112": null, "glock-113": null, "glock-114": null, "glock-122": 0.129149 },
+      "negativeTopScores": { "microphone": 0.218521, "phone": 0.17948, "seattle-clean": 0.104468, "swimming": 0.153774, "glock-clean": 0.170445, "nasa-action": 0.150456, "crowd": 0.188203 },
+      "thresholdSweep": {
+        "0.2": { "bodycam660": false, "glock113": false, "falsePositives": ["microphone"], "passes": false },
+        "0.3": { "bodycam660": false, "glock113": false, "falsePositives": [], "passes": false },
+        "0.4": { "bodycam660": false, "glock113": false, "falsePositives": [], "passes": false },
+        "0.5": { "bodycam660": false, "glock113": false, "falsePositives": [], "passes": false },
+        "0.6": { "bodycam660": false, "glock113": false, "falsePositives": [], "passes": false }
+      },
+      "resolution": { "360": { "bodycam660": null, "glock113": null }, "480": { "bodycam660": null, "glock113": null }, "720": { "bodycam660": null, "glock113": null } },
+      "tiling": { "2x2": { "bodycam660": null, "glock113": 0.130592, "runtimeRangeMs": [185.67, 187.86] }, "3x3": { "bodycam660": 0.145875, "glock113": 0.165482, "runtimeRangeMs": [424.6, 432.8] } },
+      "viable": false
+    },
+    {
+      "name": "Dricz/gun-obj-detection-3",
+      "runtime": { "loadMs": 2737.11, "coldSingleMs": 478.78, "warmSingleMedianMs": 43.76, "batchFrames": 15, "batchMs": 584.26, "batchMeanMs": 38.95, "projected119Ms": 4635.11, "projected200Ms": 7790.09 },
+      "vram": { "systemBaselineMiB": 2525, "systemModelLoadedMiB": 2816, "systemAfterBatchMiB": 9914, "systemPostUnloadMiB": 2744, "maxAllocatedMiB": 4368.71, "maxReservedMiB": 7240.0 },
+      "positives": [
+        { "case": "bodycam-650", "top": { "class": "rifle", "confidence": 0.067545, "bbox": [162.96, 446.23, 712.05, 710.49], "validLocalization": false }, "bestValid": { "class": "rifle", "confidence": 0.046939, "bbox": [502.48, 347.33, 879.36, 715.19] } },
+        { "case": "bodycam-655", "top": { "class": "pistol", "confidence": 0.016331, "bbox": [80.18, 50.57, 1218.54, 591.26], "validLocalization": false }, "bestValid": { "class": "rifle", "confidence": 0.01073, "bbox": [712.26, 360.92, 976.52, 500.75] } },
+        { "case": "bodycam-660", "top": { "class": "pistol", "confidence": 0.039532, "bbox": [104.89, 43.0, 1180.45, 645.09], "validLocalization": false }, "bestValid": null },
+        { "case": "bodycam-665", "top": { "class": "pistol", "confidence": 0.044693, "bbox": [109.01, 43.26, 1175.77, 676.61], "validLocalization": false }, "bestValid": null },
+        { "case": "glock-112", "top": { "class": "rifle", "confidence": 0.08977, "bbox": [925.76, 438.23, 1275.46, 707.39], "validLocalization": false }, "bestValid": null },
+        { "case": "glock-113", "top": { "class": "pistol", "confidence": 0.0706, "bbox": [147.33, 77.78, 1273.17, 706.54], "validLocalization": false }, "bestValid": { "class": "rifle", "confidence": 0.021016, "bbox": [785.04, 113.98, 903.09, 258.94] } },
+        { "case": "glock-114", "top": { "class": "pistol", "confidence": 0.080555, "bbox": [210.39, 135.32, 1133.17, 658.11], "validLocalization": false }, "bestValid": { "class": "rifle", "confidence": 0.040072, "bbox": [918.01, 136.99, 1135.44, 254.99] } },
+        { "case": "glock-122", "top": { "class": "rifle", "confidence": 0.074999, "bbox": [975.21, 535.23, 1182.56, 663.1], "validLocalization": false }, "bestValid": { "class": "pistol", "confidence": 0.071025, "bbox": [76.13, 38.02, 215.03, 132.7] } }
+      ],
+      "negatives": [
+        { "case": "microphone", "class": "pistol", "confidence": 0.105285, "bbox": [163.87, 241.37, 387.38, 479.15] },
+        { "case": "phone", "class": "rifle", "confidence": 0.083216, "bbox": [56.72, 6.66, 1278.61, 708.0] },
+        { "case": "seattle-clean", "class": "rifle", "confidence": 0.011208, "bbox": [186.52, 83.55, 1079.99, 396.08] },
+        { "case": "swimming", "class": "rifle", "confidence": 0.092424, "bbox": [1008.35, 341.95, 1086.2, 455.88] },
+        { "case": "glock-clean", "class": "rifle", "confidence": 0.099603, "bbox": [996.58, 403.83, 1147.01, 640.63] },
+        { "case": "nasa-action", "class": "rifle", "confidence": 0.139274, "bbox": [330.29, 452.12, 1062.38, 706.06] },
+        { "case": "crowd", "class": "pistol", "confidence": 0.07435, "bbox": [81.15, 255.11, 240.6, 689.63] }
+      ],
+      "validPositiveScores": { "bodycam-650": 0.046939, "bodycam-655": 0.01073, "bodycam-660": null, "bodycam-665": null, "glock-112": null, "glock-113": 0.021016, "glock-114": 0.040072, "glock-122": 0.071025 },
+      "negativeTopScores": { "microphone": 0.105285, "phone": 0.083216, "seattle-clean": 0.011208, "swimming": 0.092424, "glock-clean": 0.099603, "nasa-action": 0.139274, "crowd": 0.07435 },
+      "thresholdSweep": {
+        "0.2": { "bodycam660": false, "glock113": false, "falsePositives": [], "passes": false },
+        "0.3": { "bodycam660": false, "glock113": false, "falsePositives": [], "passes": false },
+        "0.4": { "bodycam660": false, "glock113": false, "falsePositives": [], "passes": false },
+        "0.5": { "bodycam660": false, "glock113": false, "falsePositives": [], "passes": false },
+        "0.6": { "bodycam660": false, "glock113": false, "falsePositives": [], "passes": false }
+      },
+      "resolution": { "360": { "bodycam660": null, "glock113": 0.018862 }, "480": { "bodycam660": null, "glock113": 0.019355 }, "720": { "bodycam660": null, "glock113": 0.02102 } },
+      "tiling": { "2x2": { "bodycam660": 0.016036, "glock113": 0.021328, "runtimeRangeMs": [190.61, 196.2] }, "3x3": { "bodycam660": 0.107309, "glock113": 0.080752, "runtimeRangeMs": [417.68, 417.78] } },
+      "viable": false
+    }
+  ],
+  "adaptiveZoomVlm": {
+    "model": "gemma4:12b",
+    "grid": "2x2",
+    "generic": true,
+    "calls": 40,
+    "modelCallTimeMs": 84663,
+    "meanCallMs": 2116.57,
+    "invalidResponses": 3,
+    "bodycam660FullWeapon": false,
+    "bodycam660TiledWeapon": false,
+    "negativeFalsePositives": [{ "case": "nasa-action", "tile": [1, 1], "confidence": 0.95, "detail": "A large-caliber machine gun or heavy weapon is mounted on a vehicle in the foreground." }],
+    "result": "NOT_PROMISING"
+  },
+  "ocrEvaluated": false,
+  "ocrReason": "Mandatory firearm detector gate did not pass.",
+  "phase5_4Started": false
+}
