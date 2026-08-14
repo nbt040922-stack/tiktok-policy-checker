@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "reviewMethod": "Manual review of eight-frame contact sheets followed by timestamp spot checks. Labels describe scene composition and useful analysis action, never a policy verdict.",
+  "videos": [
+    {
+      "id": "wxEpPin8MWw", "title": "How AI-generated videos are being used to spread disinformation", "publisher": "BBC News", "durationSeconds": 273,
+      "url": "https://www.youtube.com/watch?v=wxEpPin8MWw", "profile": "anchor, interviews, B-roll and sourced clips",
+      "labels": [
+        { "timestamp": 15, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true },
+        { "timestamp": 50, "sceneType": "ANCHOR", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 100, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true },
+        { "timestamp": 140, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 220, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true }
+      ]
+    },
+    {
+      "id": "ooiOo4WjutY", "title": "Breakingviews TV: KKR founders' big exit", "publisher": "Reuters", "durationSeconds": 126,
+      "url": "https://www.youtube.com/watch?v=ooiOo4WjutY", "profile": "single presenter, headline cards and archival B-roll",
+      "labels": [
+        { "timestamp": 5, "sceneType": "ANCHOR", "ocrUseful": false, "gemmaUseful": false },
+        { "timestamp": 20, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true },
+        { "timestamp": 50, "sceneType": "TEXT_HEAVY", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 80, "sceneType": "ANCHOR", "ocrUseful": false, "gemmaUseful": false },
+        { "timestamp": 110, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true }
+      ]
+    },
+    {
+      "id": "ugE7G0jIOdg", "title": "GM's strong third quarter results ease fears of slowdown", "publisher": "Reuters", "durationSeconds": 70,
+      "url": "https://www.youtube.com/watch?v=ugE7G0jIOdg", "profile": "continuous automotive B-roll",
+      "labels": [
+        { "timestamp": 5, "sceneType": "B_ROLL", "ocrUseful": false, "gemmaUseful": true },
+        { "timestamp": 35, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true },
+        { "timestamp": 65, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true }
+      ]
+    },
+    {
+      "id": "g_DDsSswFjs", "title": "Morale wanes at Amazon devices unit amid AI boom", "publisher": "Reuters", "durationSeconds": 140,
+      "url": "https://www.youtube.com/watch?v=g_DDsSswFjs", "profile": "product B-roll and logo graphics",
+      "labels": [
+        { "timestamp": 18, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true },
+        { "timestamp": 53, "sceneType": "CHART_GRAPHIC", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 105, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true }
+      ]
+    },
+    {
+      "id": "h-JBhQqqWHY", "title": "Andrew Tate BBC interview", "publisher": "BBC News", "durationSeconds": 737,
+      "url": "https://www.youtube.com/watch?v=h-JBhQqqWHY", "profile": "long-form interview with stable lower third and short closing B-roll",
+      "labels": [
+        { "timestamp": 60, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 300, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 560, "sceneType": "ANCHOR", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 650, "sceneType": "B_ROLL", "ocrUseful": true, "gemmaUseful": true }
+      ]
+    },
+    {
+      "id": "PLMSoD1riE0", "title": "Professor Robert Kelly family interview", "publisher": "BBC News", "durationSeconds": 571,
+      "url": "https://www.youtube.com/watch?v=PLMSoD1riE0", "profile": "remote family interview and studio handoff",
+      "labels": [
+        { "timestamp": 30, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 250, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 500, "sceneType": "ANCHOR", "ocrUseful": true, "gemmaUseful": false }
+      ]
+    },
+    {
+      "id": "CATix0Wzs6Q", "title": "Key levels to watch in the S&P", "publisher": "CNBC Television", "durationSeconds": 364,
+      "url": "https://www.youtube.com/watch?v=CATix0Wzs6Q", "profile": "presenter-led chart analysis",
+      "labels": [
+        { "timestamp": 15, "sceneType": "ANCHOR", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 60, "sceneType": "CHART_GRAPHIC", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 180, "sceneType": "CHART_GRAPHIC", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 300, "sceneType": "CHART_GRAPHIC", "ocrUseful": true, "gemmaUseful": false }
+      ]
+    },
+    {
+      "id": "FUt7neYI2p8", "title": "Investors see small election uncertainty risk", "publisher": "CNBC Television", "durationSeconds": 114,
+      "url": "https://www.youtube.com/watch?v=FUt7neYI2p8", "profile": "anchor, bar charts and quote cards",
+      "labels": [
+        { "timestamp": 5, "sceneType": "ANCHOR", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 20, "sceneType": "CHART_GRAPHIC", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 60, "sceneType": "DOCUMENT", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 100, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false }
+      ]
+    },
+    {
+      "id": "uZ1qH0aYoJI", "title": "MarketSense number of the day", "publisher": "SABC News", "durationSeconds": 113,
+      "url": "https://www.youtube.com/watch?v=uZ1qH0aYoJI", "profile": "studio presenter and persistent numeric graphic",
+      "labels": [
+        { "timestamp": 5, "sceneType": "ANCHOR", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 25, "sceneType": "CHART_GRAPHIC", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 70, "sceneType": "CHART_GRAPHIC", "ocrUseful": true, "gemmaUseful": false }
+      ]
+    },
+    {
+      "id": "LK5j3pp0Too", "title": "AI: What is the future of artificial intelligence?", "publisher": "BBC News", "durationSeconds": 998,
+      "url": "https://www.youtube.com/watch?v=LK5j3pp0Too", "profile": "15-20 minute anchor-led remote panel",
+      "labels": [
+        { "timestamp": 60, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 300, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 600, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false },
+        { "timestamp": 900, "sceneType": "INTERVIEW", "ocrUseful": true, "gemmaUseful": false }
+      ]
+    }
+  ]
+}

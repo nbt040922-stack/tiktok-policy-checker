@@ -1,0 +1,1024 @@
+{
+  "generatedAt": "2026-08-14T22:27:03.129Z",
+  "corpusSize": 10,
+  "sourceMediaCommitted": false,
+  "runtimeMs": 159737,
+  "routing": {
+    "reviewedFrames": 38,
+    "genericGemmaCalls": 38,
+    "optimizedGemmaCalls": 11,
+    "reductionPercent": 71.1,
+    "basis": "Manual frame-level usefulness labels from the reviewed news corpus."
+  },
+  "classification": {
+    "labels": 38,
+    "matched": 21,
+    "unknown": 4,
+    "rows": [
+      {
+        "videoId": "wxEpPin8MWw",
+        "timestamp": 15,
+        "expected": "B_ROLL",
+        "predicted": "UNKNOWN",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.053862847222222225,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.019857416101547558,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": "BBC"
+      },
+      {
+        "videoId": "wxEpPin8MWw",
+        "timestamp": 50,
+        "expected": "ANCHOR",
+        "predicted": "INTERVIEW",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.19542100694444445,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.003325508607198748,
+          "hashDistance": 25,
+          "overlayDistance": 27
+        },
+        "ocrText": "BBC"
+      },
+      {
+        "videoId": "wxEpPin8MWw",
+        "timestamp": 100,
+        "expected": "B_ROLL",
+        "predicted": "B_ROLL",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.1418576388888889,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.0008911493653277691,
+          "hashDistance": 38,
+          "overlayDistance": 37
+        },
+        "ocrText": ""
+      },
+      {
+        "videoId": "wxEpPin8MWw",
+        "timestamp": 140,
+        "expected": "INTERVIEW",
+        "predicted": "INTERVIEW",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.7319878472222222,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.0008607198748043818,
+          "hashDistance": 25,
+          "overlayDistance": 38
+        },
+        "ocrText": "DBC"
+      },
+      {
+        "videoId": "wxEpPin8MWw",
+        "timestamp": 220,
+        "expected": "B_ROLL",
+        "predicted": "B_ROLL",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.07290364583333334,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.003764562684750478,
+          "hashDistance": 28,
+          "overlayDistance": 29
+        },
+        "ocrText": "BBC"
+      },
+      {
+        "videoId": "ooiOo4WjutY",
+        "timestamp": 5,
+        "expected": "ANCHOR",
+        "predicted": "UNKNOWN",
+        "match": false,
+        "ocrUsefulExpected": false,
+        "signals": {
+          "skinRatio": 0.004965277777777778,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.024960876369327072,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": ""
+      },
+      {
+        "videoId": "ooiOo4WjutY",
+        "timestamp": 20,
+        "expected": "B_ROLL",
+        "predicted": "B_ROLL",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.09461805555555555,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.0004477482177012693,
+          "hashDistance": 26,
+          "overlayDistance": 32
+        },
+        "ocrText": ""
+      },
+      {
+        "videoId": "ooiOo4WjutY",
+        "timestamp": 50,
+        "expected": "TEXT_HEAVY",
+        "predicted": "ANCHOR",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.1007421875,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.007033559380977221,
+          "hashDistance": 11,
+          "overlayDistance": 11
+        },
+        "ocrText": "$175 million each"
+      },
+      {
+        "videoId": "ooiOo4WjutY",
+        "timestamp": 80,
+        "expected": "ANCHOR",
+        "predicted": "UNKNOWN",
+        "match": false,
+        "ocrUsefulExpected": false,
+        "signals": {
+          "skinRatio": 0.09057291666666667,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.00023039471396278907,
+          "hashDistance": 7,
+          "overlayDistance": 13
+        },
+        "ocrText": ""
+      },
+      {
+        "videoId": "ooiOo4WjutY",
+        "timestamp": 110,
+        "expected": "B_ROLL",
+        "predicted": "INTERVIEW",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.6094401041666667,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.001960528603721092,
+          "hashDistance": 30,
+          "overlayDistance": 28
+        },
+        "ocrText": ""
+      },
+      {
+        "videoId": "ugE7G0jIOdg",
+        "timestamp": 5,
+        "expected": "B_ROLL",
+        "predicted": "UNKNOWN",
+        "match": false,
+        "ocrUsefulExpected": false,
+        "signals": {
+          "skinRatio": 0.0001388888888888889,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.013028169014084507,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": ""
+      },
+      {
+        "videoId": "ugE7G0jIOdg",
+        "timestamp": 35,
+        "expected": "B_ROLL",
+        "predicted": "INTERVIEW",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.19145399305555555,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.02930359937402191,
+          "hashDistance": 34,
+          "overlayDistance": 35
+        },
+        "ocrText": ""
+      },
+      {
+        "videoId": "ugE7G0jIOdg",
+        "timestamp": 65,
+        "expected": "B_ROLL",
+        "predicted": "B_ROLL",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.04353732638888889,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.023800208659363588,
+          "hashDistance": 29,
+          "overlayDistance": 35
+        },
+        "ocrText": "Ford For"
+      },
+      {
+        "videoId": "g_DDsSswFjs",
+        "timestamp": 18,
+        "expected": "B_ROLL",
+        "predicted": "INTERVIEW",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.21071180555555555,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.0021778821074595724,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": "Amazon"
+      },
+      {
+        "videoId": "g_DDsSswFjs",
+        "timestamp": 53,
+        "expected": "CHART_GRAPHIC",
+        "predicted": "B_ROLL",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.040750868055555556,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.00006955312119631369,
+          "hashDistance": 33,
+          "overlayDistance": 35
+        },
+        "ocrText": ""
+      },
+      {
+        "videoId": "g_DDsSswFjs",
+        "timestamp": 105,
+        "expected": "B_ROLL",
+        "predicted": "INTERVIEW",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.468671875,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.009811337158754999,
+          "hashDistance": 35,
+          "overlayDistance": 22
+        },
+        "ocrText": "Amazon Colng to C"
+      },
+      {
+        "videoId": "h-JBhQqqWHY",
+        "timestamp": 60,
+        "expected": "INTERVIEW",
+        "predicted": "ANCHOR",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.09071614583333333,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.014680055642496958,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": "BBGNEWS Tate challenged in BBC interview 17:09"
+      },
+      {
+        "videoId": "h-JBhQqqWHY",
+        "timestamp": 300,
+        "expected": "INTERVIEW",
+        "predicted": "INTERVIEW",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.19035590277777778,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.022548252477829944,
+          "hashDistance": 37,
+          "overlayDistance": 31
+        },
+        "ocrText": "DDGNEWS Tate challenged in BBC interview European leaders meet in Moldova to discuss war in Ukraine 17:13"
+      },
+      {
+        "videoId": "h-JBhQqqWHY",
+        "timestamp": 560,
+        "expected": "ANCHOR",
+        "predicted": "ANCHOR",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.10123697916666667,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.01961832724743523,
+          "hashDistance": 29,
+          "overlayDistance": 22
+        },
+        "ocrText": "BBGNEWS Tate challenged in BBC interview Girl and boy die after Bournemouth beach incident 17:17"
+      },
+      {
+        "videoId": "h-JBhQqqWHY",
+        "timestamp": 650,
+        "expected": "B_ROLL",
+        "predicted": "INTERVIEW",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.19838107638888888,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.029651364980003477,
+          "hashDistance": 31,
+          "overlayDistance": 26
+        },
+        "ocrText": "DGNEWS Tate challenged in BBC interview Girl and bov die after Bournemouth beach incident 17:18"
+      },
+      {
+        "videoId": "PLMSoD1riE0",
+        "timestamp": 30,
+        "expected": "INTERVIEW",
+        "predicted": "INTERVIEW",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.28811631944444444,
+          "textHeavy": true,
+          "complexObject": false,
+          "edgeDensity": 0.04057989914797427,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": "BBC World News Exclusive NEWS"
+      },
+      {
+        "videoId": "PLMSoD1riE0",
+        "timestamp": 250,
+        "expected": "INTERVIEW",
+        "predicted": "INTERVIEW",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.28032986111111113,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.017262215266910103,
+          "hashDistance": 17,
+          "overlayDistance": 35
+        },
+        "ocrText": "BBC World News Exclusive NEWS"
+      },
+      {
+        "videoId": "PLMSoD1riE0",
+        "timestamp": 500,
+        "expected": "ANCHOR",
+        "predicted": "INTERVIEW",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.25180989583333335,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.02237436967483916,
+          "hashDistance": 13,
+          "overlayDistance": 24
+        },
+        "ocrText": "BBC World News Exclusive NEWS"
+      },
+      {
+        "videoId": "CATix0Wzs6Q",
+        "timestamp": 15,
+        "expected": "ANCHOR",
+        "predicted": "DOCUMENT",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.0295703125,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.028790645105199096,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": "hOnCDN Nasdag MARCH 15 FNKO OLEER EYE 3 CHART KEY LEVEL R THE S&P MASTER 业CNBC"
+      },
+      {
+        "videoId": "CATix0Wzs6Q",
+        "timestamp": 60,
+        "expected": "CHART_GRAPHIC",
+        "predicted": "CHART_GRAPHIC",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.10248697916666667,
+          "textHeavy": true,
+          "complexObject": false,
+          "edgeDensity": 0.03944966092853417,
+          "hashDistance": 27,
+          "overlayDistance": 23
+        },
+        "ocrText": "XPJUU 00 28172815 2815 300 MAR2019 KEY LEVELS FOR THE S&P MASTER 业CNBC"
+      },
+      {
+        "videoId": "CATix0Wzs6Q",
+        "timestamp": 180,
+        "expected": "CHART_GRAPHIC",
+        "predicted": "CHART_GRAPHIC",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.15134548611111112,
+          "textHeavy": true,
+          "complexObject": false,
+          "edgeDensity": 0.03568944531385846,
+          "hashDistance": 30,
+          "overlayDistance": 22
+        },
+        "ocrText": "S&P 500 2900 2815 2700 2600 2300 MAR 2019 JUN 2018 CHART THE KEY LEVELS FOR THE S&P MASTER 业CNBC"
+      },
+      {
+        "videoId": "CATix0Wzs6Q",
+        "timestamp": 300,
+        "expected": "CHART_GRAPHIC",
+        "predicted": "TEXT_HEAVY",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.04296440972222222,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.024739175795513824,
+          "hashDistance": 34,
+          "overlayDistance": 28
+        },
+        "ocrText": "Nasdaq RUCO MENT KEYLE MASTER 业CNBC"
+      },
+      {
+        "videoId": "FUt7neYI2p8",
+        "timestamp": 5,
+        "expected": "ANCHOR",
+        "predicted": "INTERVIEW",
+        "match": false,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.1665060763888889,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.023426360632933404,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": "BREAKING STOCKS ON PACE FOR BEST NEWS ELECTION WEEK IN DECADES 业CNBC"
+      },
+      {
+        "videoId": "FUt7neYI2p8",
+        "timestamp": 20,
+        "expected": "CHART_GRAPHIC",
+        "predicted": "CHART_GRAPHIC",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.3141059027777778,
+          "textHeavy": true,
+          "complexObject": false,
+          "edgeDensity": 0.047374369674839156,
+          "hashDistance": 29,
+          "overlayDistance": 32
+        },
+        "ocrText": "LACK OF KNOWN PRES. WINNER HOW MUCH OF A RISK TO MARKETS? 80% 64% 60% 40% 25% 20% Large Medium Small None Source: CNBC Fed Survey, November 4, 2020 BREAKING POST-ELECTION RALLY ROL"
+      },
+      {
+        "videoId": "FUt7neYI2p8",
+        "timestamp": 60,
+        "expected": "DOCUMENT",
+        "predicted": "DOCUMENT",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.5758854166666667,
+          "textHeavy": true,
+          "complexObject": false,
+          "edgeDensity": 0.03272039645279082,
+          "hashDistance": 33,
+          "overlayDistance": 30
+        },
+        "ocrText": "ENTARY TERG, PICTET WEALTH MGMT ly gridlocked Congress, Il shift to the Fed. They do the heavy lifting...\" 500, NASDAQ HAVING WEEK IN 7 MONTHS 业CNBC"
+      },
+      {
+        "videoId": "FUt7neYI2p8",
+        "timestamp": 100,
+        "expected": "INTERVIEW",
+        "predicted": "INTERVIEW",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.16321180555555556,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.022517822987306556,
+          "hashDistance": 31,
+          "overlayDistance": 31
+        },
+        "ocrText": "BREAKING STOCKS ON PACE FOR BEST NEWS ELECTION WEEK IN DECADES 业CNBC"
+      },
+      {
+        "videoId": "uZ1qH0aYoJI",
+        "timestamp": 5,
+        "expected": "ANCHOR",
+        "predicted": "ANCHOR",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.14140190972222222,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.022530864197530864,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": "18:31 CAT MARKET SENSE NEWS SABC TOP40 -TRADEABLE 5( sabcnews.com"
+      },
+      {
+        "videoId": "uZ1qH0aYoJI",
+        "timestamp": 25,
+        "expected": "CHART_GRAPHIC",
+        "predicted": "CHART_GRAPHIC",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.02737847222222222,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.03139454007998609,
+          "hashDistance": 22,
+          "overlayDistance": 28
+        },
+        "ocrText": "18:31 CAT NUMBER OF THE DAY $200Bn NEWS SABC SPEN 192.55 0.9 BIDCORP 315 1.45 BILLITON 299.86sabcnews.com"
+      },
+      {
+        "videoId": "uZ1qH0aYoJI",
+        "timestamp": 70,
+        "expected": "CHART_GRAPHIC",
+        "predicted": "CHART_GRAPHIC",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.02984375,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.032655190401669275,
+          "hashDistance": 6,
+          "overlayDistance": 16
+        },
+        "ocrText": "18:32 CAT NUMBER OF THE DAY $200Bn NEWS SABC ALTHCARE 24.85 2.32 MEDCLIN 90 0.65 MONDI TDPRE 4· sabcnews.com"
+      },
+      {
+        "videoId": "LK5j3pp0Too",
+        "timestamp": 60,
+        "expected": "INTERVIEW",
+        "predicted": "INTERVIEW",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.2510546875,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.025573813249869588,
+          "hashDistance": null,
+          "overlayDistance": null
+        },
+        "ocrText": "BBGNEWS THE CONTEXT Scientists warn over Artificial Intelligence bbc.co.uk/news 21:10"
+      },
+      {
+        "videoId": "LK5j3pp0Too",
+        "timestamp": 300,
+        "expected": "INTERVIEW",
+        "predicted": "INTERVIEW",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.3260590277777778,
+          "textHeavy": false,
+          "complexObject": false,
+          "edgeDensity": 0.02104416623195966,
+          "hashDistance": 24,
+          "overlayDistance": 25
+        },
+        "ocrText": "LIVE VANCOUVER BBNEWS THE CONTEXT Scientists warn over Artificial Intelligence bbc.co.uk/news 21:14"
+      },
+      {
+        "videoId": "LK5j3pp0Too",
+        "timestamp": 600,
+        "expected": "INTERVIEW",
+        "predicted": "INTERVIEW",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.1963671875,
+          "textHeavy": true,
+          "complexObject": false,
+          "edgeDensity": 0.03515040862458703,
+          "hashDistance": 24,
+          "overlayDistance": 24
+        },
+        "ocrText": "BGNEWS THE CONTEXT Scientists warn over Artificial Intelligence bbc.co.uk/news 21:19"
+      },
+      {
+        "videoId": "LK5j3pp0Too",
+        "timestamp": 900,
+        "expected": "INTERVIEW",
+        "predicted": "INTERVIEW",
+        "match": true,
+        "ocrUsefulExpected": true,
+        "signals": {
+          "skinRatio": 0.1916189236111111,
+          "textHeavy": true,
+          "complexObject": false,
+          "edgeDensity": 0.034098417666492783,
+          "hashDistance": 12,
+          "overlayDistance": 14
+        },
+        "ocrText": "NEWS THE CONTEXT Scientists warn over Artificial Intelligence bbc.co.uk/news 21:24"
+      }
+    ]
+  },
+  "ocr": {
+    "cases": 12,
+    "useful": 10,
+    "coldStartMs": 1511,
+    "status": "PASS",
+    "meanWallMs": 799,
+    "meanCpuMs": 6406,
+    "cpuToWallRatio": 8.02,
+    "warmThroughputFramesPerSecond": 1.25,
+    "multilingualLatin": {
+      "language": "German",
+      "useful": true,
+      "text": "Vertical Scrolling Text Animation - FOR OBS Fred HTML CSS <p class=\"animate-text\"> @import ur <span>This is where yok/span> family=Pop <span>Deine Bar</span> <span>Dein Restaurant</span> body{ <span>Deinen Beauty Salon</span> margin:0 <span>Deinen Blumenladen</span> font-fam font-wei box-sizi"
+    },
+    "rows": [
+      {
+        "name": "software-screen",
+        "videoId": "M7lc1UVf-VE",
+        "timestamp": 720,
+        "useful": true,
+        "expectedAny": [
+          "youtube",
+          "developers"
+        ],
+        "text": "Chrome File Edit View History Bookmarks Window Users Help 6%We YouTube Em YouTube P YouTube Pt. tde this Fic tet this fe isfiodle.ne YouTube A cn https://developers.google.com/youtube/player_parameterseParameters differences in the player, such as the video title's font size. However, when the difference b becomes completely transparent to the user, the default parameter value may change from 1 to 2. disablekb (supported players: AS3, AS2) Values: 0 or 1. Default is 0. Setting to 1 will disable the player keyboard controls. Keyboard controis are as follows: Spacebar: Play / Pause Arrow Left: Jump back 10% in the current video Arrow Right: Jump ahead 10% in the current video Arrow Up: Volume up Arrow Down: Volume Down enablejsapi (supported players: AS3, AS2, HTML5) Values: 0 or 1. Default is 0. Setting this to 1 will enable the Javascript APl. For more information on the Javascript API and how to use it, see the JlavaScript APl documentation. end (supported players: AS3) Values: A positive integer. This parameter specifies the time, measured in seconds from the start of the video, when the player should stop playing the video. Note that the time is measured from the beginning of the video and not from either the value of the start player parameter or the startSeconds parameter, which is used in YouTube Player API functions for loading or queueing a vídeo. f s (supported players: AS3, AS2) Valuee: O or 1 For the AS3 plaver the dafault value ie 1 uhich causee the fllecresn hudtion to dienlan Settina",
+        "wallMs": 2702,
+        "engineMs": 2682.9,
+        "cpuMs": 21218.75,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": true,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "news-headline",
+        "videoId": "wxEpPin8MWw",
+        "timestamp": 21,
+        "useful": true,
+        "expectedAny": [
+          "false",
+          "london"
+        ],
+        "text": "BBC AI GENERATED AUDIO FALSE LONDON",
+        "wallMs": 712,
+        "engineMs": 701,
+        "cpuMs": 6015.62,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "prevention-card",
+        "videoId": "Le7n6i0dpTI",
+        "timestamp": 23.5,
+        "useful": true,
+        "expectedAny": [
+          "mental health"
+        ],
+        "text": "MENTAL HEALTH PLAN",
+        "wallMs": 585,
+        "engineMs": 576.79,
+        "cpuMs": 4937.5,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "news-overlay",
+        "videoId": "6qv5nYmGqLs",
+        "timestamp": 297,
+        "useful": true,
+        "expectedAny": [
+          "911"
+        ],
+        "text": "911 Call",
+        "wallMs": 507,
+        "engineMs": 500.31,
+        "cpuMs": 3953.12,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "firearm-title",
+        "videoId": "KTuYS857lOE",
+        "timestamp": 55,
+        "useful": false,
+        "expectedAny": [
+          "glock"
+        ],
+        "text": "",
+        "wallMs": 519,
+        "engineMs": 513.39,
+        "cpuMs": 4250,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "handheld-overlay",
+        "videoId": "8y-hasHqCK8",
+        "timestamp": 282.5,
+        "useful": false,
+        "expectedAny": [
+          "shoot"
+        ],
+        "text": "",
+        "wallMs": 452,
+        "engineMs": 0,
+        "cpuMs": 3234.38,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "fast-title",
+        "videoId": "11csVIXiFg4",
+        "timestamp": 9,
+        "useful": true,
+        "expectedAny": [
+          "editing"
+        ],
+        "text": "FAST CUT EDITING",
+        "wallMs": 631,
+        "engineMs": 624.87,
+        "cpuMs": 5171.88,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "small-ui",
+        "videoId": "qojC09CbSQA",
+        "timestamp": 550,
+        "useful": true,
+        "expectedAny": [
+          "settings",
+          "save"
+        ],
+        "text": "Save Settings JS const {chiren: titles} = document Selector(\".animate-t const txton titles.length; let con 3000:",
+        "wallMs": 789,
+        "engineMs": 777.09,
+        "cpuMs": 6671.88,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "watermark",
+        "videoId": "0BEDHqtb0aw",
+        "timestamp": 175.5,
+        "useful": true,
+        "expectedAny": [
+          "production"
+        ],
+        "text": "CHEMLIN PRODUCTION",
+        "wallMs": 551,
+        "engineMs": 545.68,
+        "cpuMs": 4171.88,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "first-aid-title",
+        "videoId": "AhANvBB9hz0",
+        "timestamp": 6.5,
+        "useful": true,
+        "expectedAny": [
+          "sometimes"
+        ],
+        "text": "MedicalGroup Sometimes the occasional graze or paper cut might happen",
+        "wallMs": 691,
+        "engineMs": 682.44,
+        "cpuMs": 5890.62,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": true,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "first-aid-step",
+        "videoId": "AhANvBB9hz0",
+        "timestamp": 30,
+        "useful": true,
+        "expectedAny": [
+          "step 4"
+        ],
+        "text": "RafflesMedicalGroup STEP DRESSIT UP Step 4.",
+        "wallMs": 673,
+        "engineMs": 665.24,
+        "cpuMs": 5468.75,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      },
+      {
+        "name": "swim-label",
+        "videoId": "BQW9Zw0CsQ8",
+        "timestamp": 143,
+        "useful": true,
+        "expectedAny": [
+          "breathing"
+        ],
+        "text": "Modern-Day: Breathing During your breath: - Rotate your head directly to the side • Your cheek and goggle should remain at water level",
+        "wallMs": 777,
+        "engineMs": 765.73,
+        "cpuMs": 5890.62,
+        "risk": {
+          "riskSignal": "NONE",
+          "matchedCategories": [],
+          "matchedSignals": [],
+          "score": 0,
+          "benignContext": false,
+          "requiresJudge": false,
+          "privacySignals": [],
+          "categories": []
+        }
+      }
+    ],
+    "device": "CPU/ONNX Runtime",
+    "gpuMemoryDeltaMiB": 0
+  },
+  "longRealVideo": {
+    "skipped": false,
+    "videoId": "LK5j3pp0Too",
+    "durationSeconds": 998,
+    "runtimeMs": 96548,
+    "targetMet": true,
+    "reviewFrames": 0,
+    "safeWindowSegments": 34,
+    "genericRoute": {
+      "runtimeMs": 16847,
+      "framesSampled": 101,
+      "gemmaCalls": 57,
+      "safeWindowSegments": 34
+    },
+    "measuredGemmaReductionPercent": 66.7,
+    "vram": {
+      "beforeMiB": 2765,
+      "peakMiB": 11033
+    },
+    "visualStatus": "AVAILABLE",
+    "visualError": null,
+    "ocrStatus": "AVAILABLE",
+    "ocrError": null,
+    "gemmaReasons": {
+      "potential graphic visual signal": 4,
+      "stable presenter refresh interval": 14,
+      "first stable presenter representative": 5,
+      "new B-roll or major visual change": 1
+    },
+    "metrics": {
+      "framesSampled": 101,
+      "framesDeduplicated": 17,
+      "framesCheapScanned": 101,
+      "framesEscalated": 19,
+      "ocrCalls": 39,
+      "ocrFrames": 39,
+      "ocrUsefulFrames": 39,
+      "ocrDuplicateSkips": 2,
+      "vlmCalls": 19,
+      "gemmaCalls": 19,
+      "gemmaCallsSkippedByAnchorReuse": 74,
+      "visualCacheHits": 0,
+      "visualAnalysisMs": 96548,
+      "newsVisualMs": 96548,
+      "sceneTypeCounts": {
+        "ANCHOR": 1,
+        "INTERVIEW": 91,
+        "B_ROLL": 1,
+        "DOCUMENT": 4,
+        "SCREENSHOT": 0,
+        "TEXT_HEAVY": 2,
+        "CHART_GRAPHIC": 0,
+        "UNKNOWN": 2
+      },
+      "anchorSegments": 34,
+      "brollSegments": 1,
+      "documentSegments": 4,
+      "textHeavySegments": 1
+    }
+  }
+}

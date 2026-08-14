@@ -95,15 +95,33 @@ function mergeVisualFindings(textJudgment, frames, repository, config, visualSta
   const visualFindings = frames.flatMap(frame => frame.findings.map(finding => ({
     ...finding, timestamp: frame.timestamp, frameId: frame.frameId
   })));
+  const riskyOcr = frames.filter(frame => frame.ocr?.risk?.requiresJudge && !frame.ocr.duplicate);
+  const unreadableOcr = frames.filter(frame => frame.ocrRequiredUnavailable);
+  const ocrPolicies = [...new Map(riskyOcr.flatMap(frame => frame.ocr.policyCandidates || []).map(policy => [policy.id, policy])).values()];
   const evidence = {
     text: [...(textJudgment.policyIds || [])],
-    visual: visualFindings.map(({ timestamp, frameId, category, confidence, severity }) => ({ timestamp, frameId, category, confidence, severity }))
+    visual: visualFindings.map(({ timestamp, frameId, category, confidence, severity }) => ({ timestamp, frameId, category, confidence, severity })),
+    onScreenText: riskyOcr.map(frame => ({
+      timestamp: frame.timestamp, frameId: frame.frameId, normalizedText: frame.ocr.normalizedText,
+      categories: frame.ocr.risk.categories, policyIds: (frame.ocr.policyCandidates || []).map(policy => policy.id)
+    }))
   };
   if (visualStatus !== 'AVAILABLE') {
     return {
       ...textJudgment, visualStatus, visualFindings, evidence,
       decision: textJudgment.requiresVisualReview ? 'REVIEW' : textJudgment.decision,
       reason: textJudgment.requiresVisualReview ? 'Visual verification unavailable.' : textJudgment.reason
+    };
+  }
+  if (!visualFindings.length && (riskyOcr.length || unreadableOcr.length)) {
+    return {
+      ...textJudgment, decision: 'REVIEW', decisionSource: 'MULTIMODAL_POLICY_ENGINE',
+      mappingReason: unreadableOcr.length ? 'OCR_REQUIRED_UNAVAILABLE' : 'ON_SCREEN_TEXT_REVIEW_REQUIRED',
+      reason: unreadableOcr.length ? 'Material on-screen text could not be read locally.' : 'Potentially risky on-screen text requires policy review.',
+      requiresVisualReview: true,
+      policyIds: [...new Set([...(textJudgment.policyIds || []), ...ocrPolicies.map(policy => policy.id)])],
+      categories: [...new Set([...(textJudgment.categories || []), ...ocrPolicies.map(policy => policy.category)])],
+      visualStatus, visualFindings, evidence
     };
   }
   if (!visualFindings.length) {

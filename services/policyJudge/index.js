@@ -287,8 +287,18 @@ class PolicyJudgeService {
   }
 
   applyVisualAnalysis(textResult, visualResult, visualConfig, { onStage = () => {} } = {}) {
+    const framesBySegment = visualResult.framesBySegment.map(frames => frames.map(frame => {
+      if (!frame.ocr?.risk?.requiresJudge || frame.ocr.duplicate) return frame;
+      const candidates = this.repository.getCandidatePolicies({
+        text: frame.ocr.normalizedText,
+        categories: frame.ocr.risk.categories,
+        maxResults: this.config.candidatePolicies,
+        minScore: this.config.candidateMinScore
+      });
+      return { ...frame, ocr: { ...frame.ocr, policyCandidates: candidates.map(candidatePayload) } };
+    }));
     const judgments = textResult.segmentJudgments.map((judgment, index) =>
-      mergeVisualFindings(judgment, visualResult.framesBySegment[index] || [], this.repository, visualConfig, visualResult.visualStatus)
+      mergeVisualFindings(judgment, framesBySegment[index] || [], this.repository, visualConfig, visualResult.visualStatus)
     );
     onStage('safe_windows');
     const segments = mergeAdjacentDecisions(judgments, { maxGapSeconds: this.config.mergeGapSeconds });
@@ -299,6 +309,7 @@ class PolicyJudgeService {
       ...textResult, analysisVersion: 'local-qwen-visual-v3', overallDecision, segments,
       segmentJudgments: judgments, recommendedClips: findSafeWindows(judgments),
       visualStatus: visualResult.visualStatus, visualError: visualResult.visualError,
+      ocrStatus: visualResult.ocrStatus, ocrError: visualResult.ocrError,
       visual: { model: visualConfig.model, detectorVersion: visualConfig.detectorVersion, thresholdVersion: visualConfig.thresholdVersion },
       metrics: { ...textResult.metrics, visual: visualResult.metrics }
     };

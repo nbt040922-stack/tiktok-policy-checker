@@ -298,8 +298,15 @@ ipcMain.handle('analyze-youtube-video', async (event, { url, requestId }) => {
       logToFile(`Visual analysis unavailable: ${visualError.code || visualError.message}`);
       data = policyJudge.applyVisualAnalysis(textResult, {
         visualStatus: 'UNAVAILABLE', visualError: visualError.code || 'VISUAL_SUBSYSTEM_UNAVAILABLE',
+        ocrStatus: 'UNAVAILABLE', ocrError: visualError.code || 'VISUAL_SUBSYSTEM_UNAVAILABLE',
         framesBySegment: ingestion.transcriptSegments.map(() => []),
-        metrics: { framesSampled: 0, framesDeduplicated: 0, framesCheapScanned: 0, framesEscalated: 0, ocrCalls: 0, vlmCalls: 0, visualCacheHits: 0, visualAnalysisMs: 0 }
+        metrics: {
+          framesSampled: 0, framesDeduplicated: 0, framesCheapScanned: 0, framesEscalated: 0,
+          ocrCalls: 0, ocrFrames: 0, ocrUsefulFrames: 0, ocrDuplicateSkips: 0,
+          vlmCalls: 0, gemmaCalls: 0, gemmaCallsSkippedByAnchorReuse: 0,
+          visualCacheHits: 0, visualAnalysisMs: 0, newsVisualMs: 0, sceneTypeCounts: {},
+          anchorSegments: 0, brollSegments: 0, documentSegments: 0, textHeavySegments: 0
+        }
       }, visualRisk.config, { onStage });
     }
     logToFile(`Policy judge metrics: ${JSON.stringify(data.metrics)}`);

@@ -5,11 +5,14 @@ const os = require('node:os');
 const path = require('node:path');
 const { loadPolicySet } = require('../services/policyKnowledge');
 const { mergeVisualFindings } = require('../services/policyJudge/decisionEngine');
+const { PolicyJudgeService, loadPolicyJudgeConfig } = require('../services/policyJudge');
 const {
-  VisualFindingCache, VisualMediaService, VisualRiskService, cheapScan, hammingDistance,
-  loadVisualRiskConfig, normalizeOcr, parseSceneCuts, perceptualHash, preferSceneCuts,
-  samplePositions, visualCacheKey
+  NEWS_SCENE_TYPES, RapidOcrProvider, VisualFindingCache, VisualMediaService, VisualRiskService,
+  cheapScan, hammingDistance, loadVisualRiskConfig, normalizeOcr, normalizeOcrOutput,
+  parseSceneCuts, perceptualHash, preferSceneCuts, refineTextScene, samplePositions,
+  screenOcrRisk, shouldRunGemma, visualCacheKey
 } = require('../services/visualRisk');
+const { classifyNewsScene } = require('../services/visualRisk/news');
 const { validateOutput, VisualModelError } = require('../services/visualRisk/provider');
 
 const config = overrides => loadVisualRiskConfig({ frameWidth: 16, frameHeight: 8, ...overrides });
@@ -61,6 +64,59 @@ test('OCR normalization deduplicates repeated captions', () => {
   const seen = new Set();
   assert.equal(normalizeOcr('  WEAPON   FOR SALE ', seen), 'WEAPON FOR SALE');
   assert.equal(normalizeOcr('weapon for sale', seen), '');
+});
+
+test('news scene classifier is conservative across anchor and B-roll transitions', () => {
+  const cfg = config();
+  const anchorSignals = { textHeavy: false, skinRatio: 0.06, complexObject: false };
+  assert.equal(classifyNewsScene({ signals: anchorSignals, hashDistance: 4, overlayDistance: 2, sceneCut: false, config: cfg }), NEWS_SCENE_TYPES.ANCHOR);
+  assert.equal(classifyNewsScene({ signals: anchorSignals, hashDistance: 30, overlayDistance: 12, sceneCut: false, config: cfg }), NEWS_SCENE_TYPES.B_ROLL);
+  assert.equal(classifyNewsScene({ signals: anchorSignals, hashDistance: 3, overlayDistance: 1, sceneCut: false, config: cfg }), NEWS_SCENE_TYPES.ANCHOR);
+  assert.equal(classifyNewsScene({ signals: { textHeavy: false, skinRatio: 0, complexObject: false }, hashDistance: null, overlayDistance: null, sceneCut: false, config: cfg }), NEWS_SCENE_TYPES.UNKNOWN);
+});
+
+test('text scenes distinguish documents, screenshots, and charts after OCR', () => {
+  const ocr = text => ({ normalizedText: text, lines: text.split('|').map(value => ({ text: value })) });
+  assert.equal(refineTextScene(NEWS_SCENE_TYPES.TEXT_HEAVY, ocr('Posted by @reporter|Breaking update|Source')), NEWS_SCENE_TYPES.SCREENSHOT);
+  assert.equal(refineTextScene(NEWS_SCENE_TYPES.TEXT_HEAVY, ocr('one|two|three|four|five|six|seven')), NEWS_SCENE_TYPES.DOCUMENT);
+  assert.equal(refineTextScene(NEWS_SCENE_TYPES.TEXT_HEAVY, ocr('Revenue $20|Growth 12%|2025 18|2026 22')), NEWS_SCENE_TYPES.CHART_GRAPHIC);
+});
+
+test('OCR schema normalization removes duplicate lines and repeated overlays', () => {
+  const seen = new Set();
+  const raw = { lines: [
+    { text: ' BREAKING   NEWS ', confidence: 0.99, box: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+    { text: 'breaking news', confidence: 0.98, box: [] },
+    { text: 'x', confidence: 0.1, box: [] }
+  ] };
+  const first = normalizeOcrOutput(raw, 12.4, seen, 0.5);
+  const second = normalizeOcrOutput(raw, 42.4, seen, 0.5);
+  assert.equal(first.normalizedText, 'BREAKING NEWS'); assert.equal(first.lines.length, 1);
+  assert.equal(first.duplicate, false); assert.equal(second.duplicate, true);
+});
+
+test('OCR risk prefilter keeps neutral news topics and flags action or privacy evidence', () => {
+  assert.equal(screenOcrRisk('SUICIDE PREVENTION PROGRAM EXPANDS').requiresJudge, false);
+  assert.equal(screenOcrRisk('POLICE RECOVER FIREARMS').requiresJudge, false);
+  assert.equal(screenOcrRisk('REPORT EXAMINES HATE SPEECH').requiresJudge, false);
+  assert.equal(screenOcrRisk('I WILL KILL YOU').requiresJudge, true);
+  const privacy = screenOcrRisk('Contact source@example.com or +1 202 555 0198');
+  assert.equal(privacy.requiresJudge, true); assert.ok(privacy.categories.includes('personal_information'));
+});
+
+test('Gemma skip logic reuses anchors and escalates transitions, risky OCR, and UNKNOWN', () => {
+  const cfg = config();
+  const base = { cheapSignals: { possibleBlood: false, possibleNudity: false, escalate: false }, textNeedsVision: false, riskyOcr: false, ocrUnavailable: false, previousState: { lastSemanticReview: 10 }, timestamp: 20, sceneChanged: false, overlayChanged: false, middleFrame: false, config: cfg };
+  assert.equal(shouldRunGemma({ ...base, sceneType: NEWS_SCENE_TYPES.ANCHOR }), null);
+  assert.match(shouldRunGemma({ ...base, sceneType: NEWS_SCENE_TYPES.B_ROLL, sceneChanged: true }), /B-roll/);
+  assert.match(shouldRunGemma({ ...base, sceneType: NEWS_SCENE_TYPES.ANCHOR, overlayChanged: true }), /invalidated/);
+  assert.match(shouldRunGemma({ ...base, sceneType: NEWS_SCENE_TYPES.TEXT_HEAVY, riskyOcr: true }), /on-screen text/);
+  assert.match(shouldRunGemma({ ...base, sceneType: NEWS_SCENE_TYPES.UNKNOWN, middleFrame: true }), /UNKNOWN/);
+});
+
+test('missing RapidOCR environment reports unavailable without touching Electron dependencies', async () => {
+  const provider = new RapidOcrProvider({ pythonPath: path.join(os.tmpdir(), 'missing-python.exe') });
+  assert.deepEqual(await provider.healthCheck(), { ok: false, code: 'OCR_UNAVAILABLE', message: 'RapidOCR worker environment is unavailable.' });
 });
 
 test('visual finding schema rejects verdicts, extras, and invalid categories', () => {
@@ -180,6 +236,73 @@ test('benign OCR text does not become an on-screen risk finding', async () => {
       .analyze('proxy', dir, { metadata: { videoId: 'ocr' }, transcriptSegments: [segment(0, 10)] }, [baseJudgment()]);
     assert.deepEqual(result.framesBySegment[0][0].findings, []);
     assert.equal(result.framesBySegment[0][0].detectedText, 'NASA');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('stable anchor state reuses semantic review and cuts Gemma calls by at least 60 percent', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'visual-anchor-'));
+  const cfg = config();
+  const bytes = Buffer.alloc(cfg.frameWidth * cfg.frameHeight * 3, 80);
+  for (let pixel = 0; pixel < 8; pixel++) bytes.set([200, 150, 120], pixel * 3);
+  const sampler = {
+    fs, sceneCuts: async () => [], extractRaw: async (_proxy, _time, file) => { fs.writeFileSync(file, bytes); return bytes; },
+    extractJpeg: async (_proxy, _time, file) => fs.writeFileSync(file, 'jpg')
+  };
+  let calls = 0;
+  const provider = { healthCheck: async () => ({ ok: true }), unload: async () => {}, inspectFrame: async () => { calls++; return { findings: [], detectedText: '' }; } };
+  const ocrProvider = { healthCheck: async () => ({ ok: false, code: 'OCR_UNAVAILABLE' }), close: () => {} };
+  try {
+    const result = await new VisualRiskService({ config: cfg, sampler, provider, ocrProvider, cache: new VisualFindingCache() })
+      .analyze('proxy', dir, { metadata: { videoId: 'anchor' }, transcriptSegments: [segment(0, 30)] }, [baseJudgment({ requiresVisualReview: true })]);
+    assert.equal(result.metrics.framesSampled, 3); assert.equal(calls, 1);
+    assert.ok(result.metrics.gemmaCallsSkippedByAnchorReuse >= 2);
+    assert.ok(1 - calls / result.metrics.framesSampled >= 0.6);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('missing OCR marks material text for REVIEW while visual analysis continues', () => {
+  const merged = mergeVisualFindings(baseJudgment(), [{
+    timestamp: 2, frameId: 'text-frame', findings: [], ocrRequiredUnavailable: true
+  }], loadPolicySet(), config());
+  assert.equal(merged.decision, 'REVIEW'); assert.equal(merged.mappingReason, 'OCR_REQUIRED_UNAVAILABLE');
+});
+
+test('risky OCR enters policy retrieval without changing spoken transcript', () => {
+  const repository = loadPolicySet();
+  const service = new PolicyJudgeService({ repository, config: loadPolicyJudgeConfig(), provider: {} });
+  const judgment = { ...baseJudgment(), startSeconds: 0, endSeconds: 10, startLabel: '0:00', endLabel: '0:10', transcript: 'Neutral spoken report.' };
+  const textResult = {
+    segmentJudgments: [judgment], metrics: {}, transcriptSegments: [segment(0, 10)],
+    overallDecision: 'KEEP', segments: [judgment], recommendedClips: []
+  };
+  const ocr = { normalizedText: 'I WILL KILL YOU', duplicate: false, risk: screenOcrRisk('I WILL KILL YOU') };
+  const result = service.applyVisualAnalysis(textResult, {
+    visualStatus: 'AVAILABLE', ocrStatus: 'AVAILABLE', framesBySegment: [[{ timestamp: 2, frameId: 'ocr-frame', findings: [], ocr }]], metrics: {}
+  }, config());
+  assert.equal(result.segmentJudgments[0].transcript, 'Neutral spoken report.');
+  assert.equal(result.segmentJudgments[0].decision, 'REVIEW');
+  assert.ok(result.segmentJudgments[0].evidence.onScreenText[0].policyIds.length > 0);
+});
+
+test('cancellation terminates OCR work and closes the worker', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'visual-ocr-cancel-'));
+  const cfg = config({ textEdgeThreshold: 0 });
+  const bytes = Buffer.alloc(cfg.frameWidth * cfg.frameHeight * 3, 80);
+  const sampler = {
+    fs, sceneCuts: async () => [], extractRaw: async (_proxy, _time, file) => { fs.writeFileSync(file, bytes); return bytes; },
+    extractJpeg: async (_proxy, _time, file) => fs.writeFileSync(file, 'jpg')
+  };
+  let closed = false;
+  const ocrProvider = {
+    healthCheck: async () => ({ ok: true }), close: () => { closed = true; },
+    inspectFrame: async (_file, _timestamp, { signal }) => new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(Object.assign(new Error('cancelled'), { code: 'ANALYSIS_CANCELLED' })), { once: true }))
+  };
+  const controller = new AbortController();
+  const service = new VisualRiskService({ config: cfg, sampler, ocrProvider, provider: { unload: async () => {} }, cache: new VisualFindingCache() });
+  const promise = service.analyze('proxy', dir, { metadata: { videoId: 'cancel' }, transcriptSegments: [segment(0, 10)] }, [baseJudgment()], { signal: controller.signal });
+  setTimeout(() => controller.abort(), 10);
+  try {
+    await assert.rejects(promise, error => error.code === 'ANALYSIS_CANCELLED'); assert.equal(closed, true);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

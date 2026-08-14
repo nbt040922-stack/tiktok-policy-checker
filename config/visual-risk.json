@@ -11,6 +11,15 @@
     "skinRatioThreshold": 0.58,
     "edgeDensityThreshold": 0.24,
     "textEdgeThreshold": 0.015,
+    "newsOptimizationEnabled": true,
+    "newsAnchorRefreshSeconds": 60,
+    "newsAnchorHashDistance": 12,
+    "newsStateHashDistance": 22,
+    "newsOverlayHashDistance": 8,
+    "newsAnchorSkinMin": 0.015,
+    "newsInterviewSkinMin": 0.16,
+    "ocrEnabled": true,
+    "ocrMinimumConfidence": 0.5,
     "detectorConfidence": 0.58,
     "visualPolicyConfidence": 0.85,
     "model": "gemma4:12b",
@@ -18,8 +27,8 @@
     "baseUrl": "http://127.0.0.1:11434",
     "timeoutMs": 180000,
     "cacheMaxEntries": 20000,
-    "detectorVersion": "ffmpeg-rgb-v1",
-    "thresholdVersion": "visual-thresholds-v2",
+    "detectorVersion": "ffmpeg-news-scene-v2",
+    "thresholdVersion": "visual-thresholds-v3",
     "modelVersion": "gemma4-findings-v1"
   }
 }
