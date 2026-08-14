@@ -8,6 +8,7 @@
     "test": "node --test",
     "benchmark:qwen": "node scripts/run-policy-judge-benchmark.js",
     "benchmark:visual": "node scripts/run-visual-risk-benchmark.js",
+    "benchmark:visual:real": "node scripts/run-real-world-visual-stress.js",
     "test:fresh-install": "powershell -ExecutionPolicy Bypass -File scripts/test-fresh-install.ps1",
     "preflight": "node scripts/preflight.js",
     "build": "electron-builder",

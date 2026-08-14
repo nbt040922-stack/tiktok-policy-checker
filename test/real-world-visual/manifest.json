@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "reviewMethod": "Human review of 12-frame contact sheets plus 0.5-1 fps fine sheets for the three risk-bearing cases. Labels describe visible evidence, never a TikTok moderation verdict.",
+  "videos": [
+    {
+      "id": "M7lc1UVf-VE",
+      "url": "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+      "title": "YouTube Developers Live: Embedded Web Player Customization",
+      "publisher": "Google for Developers",
+      "durationSeconds": 1344,
+      "license": "Creative Commons Attribution",
+      "challenges": ["long-form", "talking-head", "software-ui", "dense-text"],
+      "reviewWindows": [
+        { "start": 0, "end": 95, "labels": ["CLEAN"], "note": "Talking head and title graphics." },
+        { "start": 96, "end": 1344, "labels": ["TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["YouTube", "player"], "note": "Browser, API documentation and code text; benign software context." }
+      ]
+    },
+    {
+      "id": "wxEpPin8MWw",
+      "url": "https://www.youtube.com/watch?v=wxEpPin8MWw",
+      "title": "How AI-generated videos are being used to spread disinformation",
+      "publisher": "BBC News",
+      "durationSeconds": 273,
+      "license": "Standard YouTube License",
+      "challenges": ["news", "politics", "rapid-cuts", "text-overlay"],
+      "reviewWindows": [
+        { "start": 0, "end": 42, "labels": ["TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["BBC", "AI"], "note": "News captions and deepfake framing." },
+        { "start": 43, "end": 73, "labels": ["TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["FALSE", "RECORDING"], "briefEventBand": "1-2s", "note": "Fast news montage including false-recording overlay." },
+        { "start": 74, "end": 273, "labels": ["CLEAN", "TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["BBC"], "note": "Interviews, politician and city footage in news context." }
+      ]
+    },
+    {
+      "id": "Le7n6i0dpTI",
+      "url": "https://www.youtube.com/watch?v=Le7n6i0dpTI",
+      "title": "WHO prevention animation",
+      "publisher": "World Health Organization",
+      "durationSeconds": 47,
+      "license": "Standard YouTube License",
+      "challenges": ["animation", "prevention-context", "short-form"],
+      "reviewWindows": [
+        { "start": 0, "end": 47, "labels": ["CLEAN"], "note": "Clean prevention animation; no harmful act is visible." }
+      ]
+    },
+    {
+      "id": "6qv5nYmGqLs",
+      "url": "https://www.youtube.com/watch?v=6qv5nYmGqLs",
+      "title": "LVMPD briefing with bodycam evidence",
+      "publisher": "KTNV Channel 13 Las Vegas",
+      "durationSeconds": 1076,
+      "license": "Standard YouTube License",
+      "challenges": ["news", "bodycam", "low-light", "small-object", "long-form"],
+      "reviewWindows": [
+        { "start": 0, "end": 594, "labels": ["CLEAN", "TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["POLICE"], "note": "Police press conference and evidence graphics." },
+        { "start": 595, "end": 649, "labels": ["OTHER_VISUAL_RISK"], "note": "Shaky, overexposed bodycam evidence shown inside the news briefing." },
+        { "start": 650, "end": 670, "labels": ["WEAPON_VISIBLE"], "briefEventBand": "2-5s", "smallObjectOrText": true, "note": "Small suspected handgun is explicitly circled in bodycam evidence; news context." },
+        { "start": 671, "end": 1076, "labels": ["CLEAN", "TEXT_RISK"], "ocrTextPresent": true, "note": "Returns to press conference, maps and evidence slides." }
+      ]
+    },
+    {
+      "id": "_x5y8HEuuWI",
+      "url": "https://www.youtube.com/watch?v=_x5y8HEuuWI",
+      "title": "Seattle Police body-worn camera arrest footage",
+      "publisher": "Seattle Police Department",
+      "durationSeconds": 569,
+      "license": "Standard YouTube License",
+      "challenges": ["bodycam", "shaky", "blur", "law-enforcement"],
+      "reviewWindows": [
+        { "start": 0, "end": 569, "labels": ["OTHER_VISUAL_RISK"], "note": "Body-worn arrest footage; physical restraint context but no confirmed weapon or blood on manual contact-sheet review." }
+      ]
+    },
+    {
+      "id": "KTuYS857lOE",
+      "url": "https://www.youtube.com/watch?v=KTuYS857lOE",
+      "title": "GLOCK Four Rules of Firearm Safety",
+      "publisher": "GLOCK, Inc.",
+      "durationSeconds": 145,
+      "license": "Standard YouTube License",
+      "challenges": ["weapon", "instructional-context", "brief-event"],
+      "reviewWindows": [
+        { "start": 0, "end": 110, "labels": ["CLEAN", "TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["RULE"], "note": "Interviews and firearm-safety rule titles." },
+        { "start": 111, "end": 115, "labels": ["WEAPON_VISIBLE"], "briefEventBand": "2-5s", "note": "Handgun handled at an outdoor table." },
+        { "start": 116, "end": 120, "labels": ["CLEAN"], "note": "Interview cutaway." },
+        { "start": 121, "end": 124, "labels": ["WEAPON_VISIBLE"], "briefEventBand": "2-5s", "note": "Handgun fired toward paper targets in safety demonstration." },
+        { "start": 125, "end": 145, "labels": ["CLEAN"], "note": "Closing interview." }
+      ]
+    },
+    {
+      "id": "Wfoy_OvNDvw",
+      "url": "https://www.youtube.com/watch?v=Wfoy_OvNDvw",
+      "title": "NASA action camera spacewalk footage",
+      "publisher": "NASA",
+      "durationSeconds": 91,
+      "license": "Standard YouTube License",
+      "challenges": ["action-camera", "motion", "high-contrast"],
+      "reviewWindows": [
+        { "start": 0, "end": 91, "labels": ["CLEAN"], "note": "Moving exterior ISS view; no policy-risk object." }
+      ]
+    },
+    {
+      "id": "jAAFacj17iE",
+      "url": "https://www.youtube.com/watch?v=jAAFacj17iE",
+      "title": "Crowd stock footage compilation",
+      "publisher": "Eye Definition",
+      "durationSeconds": 884,
+      "license": "Creative Commons Attribution",
+      "challenges": ["crowds", "day-night", "repetition", "long-form"],
+      "reviewWindows": [
+        { "start": 0, "end": 884, "labels": ["CLEAN"], "note": "Public crowds and events in daylight and at night." }
+      ]
+    },
+    {
+      "id": "8y-hasHqCK8",
+      "url": "https://www.youtube.com/watch?v=8y-hasHqCK8",
+      "title": "Smartphone handheld camera movements",
+      "publisher": "Thomas Alex Norman",
+      "durationSeconds": 565,
+      "license": "Standard YouTube License",
+      "challenges": ["handheld", "shaky", "motion", "text-overlay"],
+      "reviewWindows": [
+        { "start": 0, "end": 565, "labels": ["CLEAN", "TEXT_RISK"], "ocrTextPresent": true, "note": "Benign handheld filming tutorial with instructional overlays." }
+      ]
+    },
+    {
+      "id": "11csVIXiFg4",
+      "url": "https://www.youtube.com/watch?v=11csVIXiFg4",
+      "title": "Fast-cut editing tutorial",
+      "publisher": "Nathan Skrivanic",
+      "durationSeconds": 196,
+      "license": "Standard YouTube License",
+      "challenges": ["fast-cuts", "brief-event", "motion", "text-overlay"],
+      "reviewWindows": [
+        { "start": 0, "end": 18, "labels": ["TEXT_RISK"], "ocrTextPresent": true, "briefEventBand": "<1s", "note": "Very fast title and transition montage." },
+        { "start": 19, "end": 196, "labels": ["CLEAN", "TEXT_RISK"], "ocrTextPresent": true, "note": "Editing examples, phone, camera and instructional text." }
+      ]
+    },
+    {
+      "id": "qojC09CbSQA",
+      "url": "https://www.youtube.com/watch?v=qojC09CbSQA",
+      "title": "OBS text and news-overlay tutorial",
+      "publisher": "Scott Fichter",
+      "durationSeconds": 1152,
+      "license": "Standard YouTube License",
+      "challenges": ["dense-text", "software-ui", "multilingual-ocr", "low-light", "long-form"],
+      "reviewWindows": [
+        { "start": 0, "end": 1100, "labels": ["CLEAN", "TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["OBS"], "briefEventBand": "1-2s", "smallObjectOrText": true, "note": "Code, browser, English/Japanese font samples and animated overlays." },
+        { "start": 1101, "end": 1152, "labels": ["CLEAN"], "note": "Low-light closing footage." }
+      ]
+    },
+    {
+      "id": "0BEDHqtb0aw",
+      "url": "https://www.youtube.com/watch?v=0BEDHqtb0aw",
+      "title": "ISS night timelapse",
+      "publisher": "NASA / public space footage compilation",
+      "durationSeconds": 351,
+      "license": "Standard YouTube License",
+      "challenges": ["low-light", "timelapse", "city-lights"],
+      "reviewWindows": [
+        { "start": 0, "end": 351, "labels": ["CLEAN"], "note": "Dark Earth and city lights; no policy-risk object." }
+      ]
+    },
+    {
+      "id": "AhANvBB9hz0",
+      "url": "https://www.youtube.com/watch?v=AhANvBB9hz0",
+      "title": "Treating Cuts and Bruises",
+      "publisher": "Raffles Medical Group",
+      "durationSeconds": 54,
+      "license": "Standard YouTube License",
+      "challenges": ["minor-injury", "medical-context", "small-object", "text-overlay"],
+      "reviewWindows": [
+        { "start": 0, "end": 13, "labels": ["CLEAN", "TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["CUTS", "BRUISES"], "note": "First-aid title and setup." },
+        { "start": 14, "end": 46, "labels": ["INJURY_VISIBLE", "TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["STOP THE BLEEDING", "WASH IT", "CLEAN IT"], "smallObjectOrText": true, "note": "Small staged cut on forearm being cleaned and dressed; medical instruction." },
+        { "start": 47, "end": 54, "labels": ["CLEAN", "TEXT_RISK"], "ocrTextPresent": true, "note": "End cards." }
+      ]
+    },
+    {
+      "id": "BQW9Zw0CsQ8",
+      "url": "https://www.youtube.com/watch?v=BQW9Zw0CsQ8",
+      "title": "Freestyle swimming instruction",
+      "publisher": "U.S. Masters Swimming",
+      "durationSeconds": 286,
+      "license": "Standard YouTube License",
+      "challenges": ["swimwear", "skin-exposure", "underwater", "text-overlay"],
+      "reviewWindows": [
+        { "start": 0, "end": 286, "labels": ["NUDITY_RISK", "TEXT_RISK"], "ocrTextPresent": true, "expectedTextFragments": ["FREESTYLE"], "note": "Shirtless/swimwear athletes in neutral sports instruction; nudity-risk test, not nudity." }
+      ]
+    }
+  ]
+}

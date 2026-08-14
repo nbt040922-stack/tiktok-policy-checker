@@ -15,10 +15,13 @@ function loadVisualRiskConfig(overrides = {}) {
   return Object.freeze(config);
 }
 
-function samplePositions(segment) {
+function samplePositions(segment, profile = null) {
   const start = Number(segment.startSeconds);
   const duration = Math.max(0.1, Number(segment.endSeconds) - start);
-  const fractions = duration <= 15 ? [0.25, 0.75] : duration <= 30 ? [0.15, 0.5, 0.85] : [0.1, 0.37, 0.63, 0.9];
+  const count = profile && (duration <= 15 ? profile.short : duration <= 30 ? profile.medium : profile.long);
+  const fractions = count
+    ? Array.from({ length: count }, (_, index) => (index + 1) / (count + 1))
+    : duration <= 15 ? [0.25, 0.75] : duration <= 30 ? [0.15, 0.5, 0.85] : [0.1, 0.37, 0.63, 0.9];
   return fractions.map(fraction => Number((start + duration * fraction).toFixed(3)));
 }
 
@@ -250,9 +253,9 @@ class VisualRiskService {
               metrics.vlmCalls++;
               if (cheapSignals.textHeavy) metrics.ocrCalls++;
               const inspected = await this.provider.inspectFrame(jpegPath, cheapSignals, { signal });
-              findings = inspected.findings.filter(item => item.applies);
+              findings = inspected.findings.filter(item => item.applies && item.category !== 'on_screen_text_risk');
               detectedText = normalizeOcr(inspected.detectedText, seenText);
-              if (detectedText && ocrRisk(detectedText) && !findings.some(item => item.category === 'on_screen_text_risk')) {
+              if (detectedText && ocrRisk(detectedText)) {
                 findings.push({ category: 'on_screen_text_risk', applies: true, confidence: 0.75, severity: 'uncertain', detail: detectedText, requiresHumanReview: true });
               }
             } catch (providerError) {

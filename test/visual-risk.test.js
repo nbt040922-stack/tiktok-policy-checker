@@ -30,6 +30,13 @@ test('frame sampling uses 2, 3, and 4 early/middle/late positions', () => {
   assert.equal(samplePositions(segment(0, 45)).length, 4);
 });
 
+test('aggressive frame sampling uses configured 3, 5, and 7 positions', () => {
+  const profile = { short: 3, medium: 5, long: 7 };
+  assert.equal(samplePositions(segment(0, 10), profile).length, 3);
+  assert.equal(samplePositions(segment(0, 20), profile).length, 5);
+  assert.equal(samplePositions(segment(0, 40), profile).length, 7);
+});
+
 test('scene cuts replace only nearby planned samples', () => {
   assert.deepEqual(preferSceneCuts([2, 10, 18], [1.5, 12, 18.2], 1), [1.5, 10, 18.2]);
   assert.deepEqual(parseSceneCuts('showinfo pts_time:1.25 x\nshowinfo pts_time:9.5 x'), [1.25, 9.5]);
@@ -153,6 +160,26 @@ test('service deduplicates frames, escalates once, and reuses cache', async () =
     assert.equal(first.metrics.framesSampled, 4); assert.equal(first.metrics.framesDeduplicated, 3); assert.equal(calls, 1);
     const second = await service.analyze('proxy', dir, ingestion, [baseJudgment(), baseJudgment()]);
     assert.ok(second.metrics.visualCacheHits >= 1); assert.equal(calls, 1);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('benign OCR text does not become an on-screen risk finding', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'visual-ocr-'));
+  const cfg = config({ edgeDensityThreshold: 0 });
+  const bytes = Buffer.alloc(cfg.frameWidth * cfg.frameHeight * 3, 80);
+  const sampler = {
+    fs, sceneCuts: async () => [], extractRaw: async (_proxy, _time, file) => { fs.writeFileSync(file, bytes); return bytes; },
+    extractJpeg: async (_proxy, _time, file) => fs.writeFileSync(file, 'jpg')
+  };
+  const provider = {
+    healthCheck: async () => ({ ok: true }), unload: async () => {},
+    inspectFrame: async () => ({ findings: [finding({ category: 'on_screen_text_risk', detail: 'NASA' })], detectedText: 'NASA' })
+  };
+  try {
+    const result = await new VisualRiskService({ config: cfg, sampler, provider, cache: new VisualFindingCache() })
+      .analyze('proxy', dir, { metadata: { videoId: 'ocr' }, transcriptSegments: [segment(0, 10)] }, [baseJudgment()]);
+    assert.deepEqual(result.framesBySegment[0][0].findings, []);
+    assert.equal(result.framesBySegment[0][0].detectedText, 'NASA');
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

@@ -96,7 +96,8 @@ test('main process reuses auth and keeps transcript ingestion media-free before 
   const preload = source('preload.js');
   assert.match(main, /youtubeAuth\.withTemporaryCookies/);
   assert.match(main, /'--no-playlist', '--skip-download', '--dump-single-json'/);
-  assert.match(main, /downloadVisualProxy[\s\S]*bestvideo\[height<=360\]/);
+  assert.match(main, /downloadVisualProxy[\s\S]*18\/best\[height<=360\]\/bestvideo\[height<=360\]/);
+  assert.match(main, /downloadVisualProxy[\s\S]*jsRuntime: false/);
   assert.match(main, /ipcMain\.handle\('analyze-youtube-video'/);
   assert.match(main, /activeAnalysisControllers\.get\(senderId\)\?\.abort\(\)/);
   assert.match(preload, /analyzeYouTubeVideo/);

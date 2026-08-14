@@ -1,0 +1,1185 @@
+{
+  "generatedAt": "2026-08-14T20:06:50.212Z",
+  "model": "gemma4:12b",
+  "corpusSize": 14,
+  "sourceMediaCommitted": false,
+  "runtimeMs": 398027,
+  "vram": {
+    "beforeMiB": 10913,
+    "afterQwenUnloadMiB": 10913,
+    "after5VideosMiB": 10877,
+    "after10VideosMiB": 10885,
+    "peakMiB": 11108,
+    "afterGemmaUnloadMiB": 2622
+  },
+  "isolatedSchedulingProbe": {
+    "baselineMiB": 2643,
+    "qwenLoadedMiB": 11837,
+    "afterQwenUnloadMiB": 2486,
+    "gemmaLoadedMiB": 10693,
+    "afterGemmaUnloadMiB": 2494,
+    "coldGemmaCallMs": 8904
+  },
+  "videos": [
+    {
+      "id": "M7lc1UVf-VE",
+      "durationSeconds": 1344,
+      "challenges": [
+        "long-form",
+        "talking-head",
+        "software-ui",
+        "dense-text"
+      ],
+      "sceneCutsDetected": 56,
+      "framesExtracted": 203,
+      "extractionAndScanMs": 32110,
+      "sampling": {
+        "baselinePlanned": 203,
+        "aggressivePlanned": 338,
+        "targetWindows": 1,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 114,
+          "removed": 89,
+          "riskLost": 2,
+          "vlmCandidates": 72,
+          "comparisonMs": 17
+        },
+        "7": {
+          "retained": 76,
+          "removed": 127,
+          "riskLost": 7,
+          "vlmCandidates": 47,
+          "comparisonMs": 12
+        },
+        "10": {
+          "retained": 53,
+          "removed": 150,
+          "riskLost": 9,
+          "vlmCandidates": 30,
+          "comparisonMs": 8
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 126,
+        "retainedAt7": 76,
+        "riskNotEscalated": 63
+      }
+    },
+    {
+      "id": "wxEpPin8MWw",
+      "durationSeconds": 273,
+      "challenges": [
+        "news",
+        "politics",
+        "rapid-cuts",
+        "text-overlay"
+      ],
+      "sceneCutsDetected": 54,
+      "framesExtracted": 41,
+      "extractionAndScanMs": 7833,
+      "sampling": {
+        "baselinePlanned": 41,
+        "aggressivePlanned": 68,
+        "targetWindows": 3,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 41,
+          "removed": 0,
+          "riskLost": 0,
+          "vlmCandidates": 14,
+          "comparisonMs": 2
+        },
+        "7": {
+          "retained": 37,
+          "removed": 4,
+          "riskLost": 0,
+          "vlmCandidates": 12,
+          "comparisonMs": 2
+        },
+        "10": {
+          "retained": 35,
+          "removed": 6,
+          "riskLost": 0,
+          "vlmCandidates": 10,
+          "comparisonMs": 2
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 14,
+        "retainedAt7": 37,
+        "riskNotEscalated": 27
+      }
+    },
+    {
+      "id": "Le7n6i0dpTI",
+      "durationSeconds": 47,
+      "challenges": [
+        "animation",
+        "prevention-context",
+        "short-form"
+      ],
+      "sceneCutsDetected": 1,
+      "framesExtracted": 8,
+      "extractionAndScanMs": 1319,
+      "sampling": {
+        "baselinePlanned": 8,
+        "aggressivePlanned": 13,
+        "targetWindows": 0,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 8,
+          "removed": 0,
+          "riskLost": 0,
+          "vlmCandidates": 3,
+          "comparisonMs": 0
+        },
+        "7": {
+          "retained": 7,
+          "removed": 1,
+          "riskLost": 0,
+          "vlmCandidates": 3,
+          "comparisonMs": 0
+        },
+        "10": {
+          "retained": 7,
+          "removed": 1,
+          "riskLost": 0,
+          "vlmCandidates": 3,
+          "comparisonMs": 0
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 3,
+        "retainedAt7": 7,
+        "riskNotEscalated": 0
+      }
+    },
+    {
+      "id": "6qv5nYmGqLs",
+      "durationSeconds": 1076,
+      "challenges": [
+        "news",
+        "bodycam",
+        "low-light",
+        "small-object",
+        "long-form"
+      ],
+      "sceneCutsDetected": 11,
+      "framesExtracted": 162,
+      "extractionAndScanMs": 32797,
+      "sampling": {
+        "baselinePlanned": 162,
+        "aggressivePlanned": 270,
+        "targetWindows": 4,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 119,
+          "removed": 43,
+          "riskLost": 0,
+          "vlmCandidates": 24,
+          "comparisonMs": 17
+        },
+        "7": {
+          "retained": 92,
+          "removed": 70,
+          "riskLost": 0,
+          "vlmCandidates": 21,
+          "comparisonMs": 14
+        },
+        "10": {
+          "retained": 77,
+          "removed": 85,
+          "riskLost": 1,
+          "vlmCandidates": 17,
+          "comparisonMs": 14
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 36,
+        "retainedAt7": 92,
+        "riskNotEscalated": 126
+      }
+    },
+    {
+      "id": "_x5y8HEuuWI",
+      "durationSeconds": 569,
+      "challenges": [
+        "bodycam",
+        "shaky",
+        "blur",
+        "law-enforcement"
+      ],
+      "sceneCutsDetected": 2,
+      "framesExtracted": 86,
+      "extractionAndScanMs": 15563,
+      "sampling": {
+        "baselinePlanned": 86,
+        "aggressivePlanned": 143,
+        "targetWindows": 1,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 83,
+          "removed": 3,
+          "riskLost": 0,
+          "vlmCandidates": 1,
+          "comparisonMs": 7
+        },
+        "7": {
+          "retained": 76,
+          "removed": 10,
+          "riskLost": 0,
+          "vlmCandidates": 1,
+          "comparisonMs": 5
+        },
+        "10": {
+          "retained": 66,
+          "removed": 20,
+          "riskLost": 0,
+          "vlmCandidates": 1,
+          "comparisonMs": 4
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 1,
+        "retainedAt7": 76,
+        "riskNotEscalated": 85
+      }
+    },
+    {
+      "id": "KTuYS857lOE",
+      "durationSeconds": 145,
+      "challenges": [
+        "weapon",
+        "instructional-context",
+        "brief-event"
+      ],
+      "sceneCutsDetected": 50,
+      "framesExtracted": 23,
+      "extractionAndScanMs": 3511,
+      "sampling": {
+        "baselinePlanned": 23,
+        "aggressivePlanned": 38,
+        "targetWindows": 3,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 23,
+          "removed": 0,
+          "riskLost": 0,
+          "vlmCandidates": 13,
+          "comparisonMs": 1
+        },
+        "7": {
+          "retained": 22,
+          "removed": 1,
+          "riskLost": 0,
+          "vlmCandidates": 13,
+          "comparisonMs": 0
+        },
+        "10": {
+          "retained": 21,
+          "removed": 2,
+          "riskLost": 0,
+          "vlmCandidates": 12,
+          "comparisonMs": 1
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 13,
+        "retainedAt7": 22,
+        "riskNotEscalated": 7
+      }
+    },
+    {
+      "id": "Wfoy_OvNDvw",
+      "durationSeconds": 91,
+      "challenges": [
+        "action-camera",
+        "motion",
+        "high-contrast"
+      ],
+      "sceneCutsDetected": 1,
+      "framesExtracted": 14,
+      "extractionAndScanMs": 2447,
+      "sampling": {
+        "baselinePlanned": 14,
+        "aggressivePlanned": 23,
+        "targetWindows": 0,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 14,
+          "removed": 0,
+          "riskLost": 0,
+          "vlmCandidates": 0,
+          "comparisonMs": 0
+        },
+        "7": {
+          "retained": 14,
+          "removed": 0,
+          "riskLost": 0,
+          "vlmCandidates": 0,
+          "comparisonMs": 0
+        },
+        "10": {
+          "retained": 14,
+          "removed": 0,
+          "riskLost": 0,
+          "vlmCandidates": 0,
+          "comparisonMs": 0
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 0,
+        "retainedAt7": 14,
+        "riskNotEscalated": 0
+      }
+    },
+    {
+      "id": "jAAFacj17iE",
+      "durationSeconds": 884,
+      "challenges": [
+        "crowds",
+        "day-night",
+        "repetition",
+        "long-form"
+      ],
+      "sceneCutsDetected": 61,
+      "framesExtracted": 134,
+      "extractionAndScanMs": 24136,
+      "sampling": {
+        "baselinePlanned": 134,
+        "aggressivePlanned": 223,
+        "targetWindows": 0,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 132,
+          "removed": 2,
+          "riskLost": 0,
+          "vlmCandidates": 33,
+          "comparisonMs": 31
+        },
+        "7": {
+          "retained": 132,
+          "removed": 2,
+          "riskLost": 0,
+          "vlmCandidates": 33,
+          "comparisonMs": 22
+        },
+        "10": {
+          "retained": 128,
+          "removed": 6,
+          "riskLost": 0,
+          "vlmCandidates": 30,
+          "comparisonMs": 20
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 33,
+        "retainedAt7": 132,
+        "riskNotEscalated": 0
+      }
+    },
+    {
+      "id": "8y-hasHqCK8",
+      "durationSeconds": 565,
+      "challenges": [
+        "handheld",
+        "shaky",
+        "motion",
+        "text-overlay"
+      ],
+      "sceneCutsDetected": 98,
+      "framesExtracted": 86,
+      "extractionAndScanMs": 13041,
+      "sampling": {
+        "baselinePlanned": 86,
+        "aggressivePlanned": 143,
+        "targetWindows": 1,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 84,
+          "removed": 2,
+          "riskLost": 0,
+          "vlmCandidates": 2,
+          "comparisonMs": 8
+        },
+        "7": {
+          "retained": 84,
+          "removed": 2,
+          "riskLost": 0,
+          "vlmCandidates": 2,
+          "comparisonMs": 6
+        },
+        "10": {
+          "retained": 84,
+          "removed": 2,
+          "riskLost": 0,
+          "vlmCandidates": 2,
+          "comparisonMs": 7
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 2,
+        "retainedAt7": 84,
+        "riskNotEscalated": 84
+      }
+    },
+    {
+      "id": "11csVIXiFg4",
+      "durationSeconds": 196,
+      "challenges": [
+        "fast-cuts",
+        "brief-event",
+        "motion",
+        "text-overlay"
+      ],
+      "sceneCutsDetected": 63,
+      "framesExtracted": 30,
+      "extractionAndScanMs": 4841,
+      "sampling": {
+        "baselinePlanned": 30,
+        "aggressivePlanned": 50,
+        "targetWindows": 2,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 27,
+          "removed": 3,
+          "riskLost": 3,
+          "vlmCandidates": 1,
+          "comparisonMs": 1
+        },
+        "7": {
+          "retained": 26,
+          "removed": 4,
+          "riskLost": 4,
+          "vlmCandidates": 1,
+          "comparisonMs": 1
+        },
+        "10": {
+          "retained": 24,
+          "removed": 6,
+          "riskLost": 4,
+          "vlmCandidates": 1,
+          "comparisonMs": 1
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 2,
+        "retainedAt7": 26,
+        "riskNotEscalated": 27
+      }
+    },
+    {
+      "id": "qojC09CbSQA",
+      "durationSeconds": 1152,
+      "challenges": [
+        "dense-text",
+        "software-ui",
+        "multilingual-ocr",
+        "low-light",
+        "long-form"
+      ],
+      "sceneCutsDetected": 66,
+      "framesExtracted": 173,
+      "extractionAndScanMs": 30499,
+      "sampling": {
+        "baselinePlanned": 173,
+        "aggressivePlanned": 288,
+        "targetWindows": 1,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 163,
+          "removed": 10,
+          "riskLost": 0,
+          "vlmCandidates": 27,
+          "comparisonMs": 24
+        },
+        "7": {
+          "retained": 144,
+          "removed": 29,
+          "riskLost": 0,
+          "vlmCandidates": 21,
+          "comparisonMs": 22
+        },
+        "10": {
+          "retained": 124,
+          "removed": 49,
+          "riskLost": 0,
+          "vlmCandidates": 21,
+          "comparisonMs": 18
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 29,
+        "retainedAt7": 144,
+        "riskNotEscalated": 136
+      }
+    },
+    {
+      "id": "0BEDHqtb0aw",
+      "durationSeconds": 351,
+      "challenges": [
+        "low-light",
+        "timelapse",
+        "city-lights"
+      ],
+      "sceneCutsDetected": 0,
+      "framesExtracted": 53,
+      "extractionAndScanMs": 9689,
+      "sampling": {
+        "baselinePlanned": 53,
+        "aggressivePlanned": 88,
+        "targetWindows": 0,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 48,
+          "removed": 5,
+          "riskLost": 0,
+          "vlmCandidates": 1,
+          "comparisonMs": 3
+        },
+        "7": {
+          "retained": 48,
+          "removed": 5,
+          "riskLost": 0,
+          "vlmCandidates": 1,
+          "comparisonMs": 4
+        },
+        "10": {
+          "retained": 46,
+          "removed": 7,
+          "riskLost": 0,
+          "vlmCandidates": 1,
+          "comparisonMs": 4
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 1,
+        "retainedAt7": 48,
+        "riskNotEscalated": 0
+      }
+    },
+    {
+      "id": "AhANvBB9hz0",
+      "durationSeconds": 54,
+      "challenges": [
+        "minor-injury",
+        "medical-context",
+        "small-object",
+        "text-overlay"
+      ],
+      "sceneCutsDetected": 3,
+      "framesExtracted": 8,
+      "extractionAndScanMs": 1445,
+      "sampling": {
+        "baselinePlanned": 8,
+        "aggressivePlanned": 13,
+        "targetWindows": 3,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 8,
+          "removed": 0,
+          "riskLost": 0,
+          "vlmCandidates": 7,
+          "comparisonMs": 0
+        },
+        "7": {
+          "retained": 8,
+          "removed": 0,
+          "riskLost": 0,
+          "vlmCandidates": 7,
+          "comparisonMs": 0
+        },
+        "10": {
+          "retained": 8,
+          "removed": 0,
+          "riskLost": 0,
+          "vlmCandidates": 7,
+          "comparisonMs": 0
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 7,
+        "retainedAt7": 8,
+        "riskNotEscalated": 1
+      }
+    },
+    {
+      "id": "BQW9Zw0CsQ8",
+      "durationSeconds": 286,
+      "challenges": [
+        "swimwear",
+        "skin-exposure",
+        "underwater",
+        "text-overlay"
+      ],
+      "sceneCutsDetected": 35,
+      "framesExtracted": 44,
+      "extractionAndScanMs": 7737,
+      "sampling": {
+        "baselinePlanned": 44,
+        "aggressivePlanned": 73,
+        "targetWindows": 1,
+        "baselineMisses": [],
+        "aggressiveMisses": []
+      },
+      "dedupe": {
+        "4": {
+          "retained": 43,
+          "removed": 1,
+          "riskLost": 0,
+          "vlmCandidates": 2,
+          "comparisonMs": 2
+        },
+        "7": {
+          "retained": 42,
+          "removed": 2,
+          "riskLost": 0,
+          "vlmCandidates": 2,
+          "comparisonMs": 2
+        },
+        "10": {
+          "retained": 41,
+          "removed": 3,
+          "riskLost": 0,
+          "vlmCandidates": 2,
+          "comparisonMs": 2
+        }
+      },
+      "cheapEscalation": {
+        "escalated": 2,
+        "retainedAt7": 42,
+        "riskNotEscalated": 42
+      }
+    }
+  ],
+  "vlm": [
+    {
+      "id": "M7lc1UVf-VE",
+      "timestamp": 720,
+      "labels": [
+        "TEXT_RISK"
+      ],
+      "pass": false,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1618,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "wxEpPin8MWw",
+      "timestamp": 21,
+      "labels": [
+        "TEXT_RISK"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 4921,
+      "findings": [
+        {
+          "category": "on_screen_text_risk",
+          "applies": true,
+          "confidence": 1,
+          "severity": "none",
+          "detail": "FALSE",
+          "requiresHumanReview": false
+        }
+      ],
+      "detectedText": "FALSE"
+    },
+    {
+      "id": "wxEpPin8MWw",
+      "timestamp": 58,
+      "labels": [
+        "TEXT_RISK"
+      ],
+      "pass": false,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1646,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "Le7n6i0dpTI",
+      "timestamp": 23.5,
+      "labels": [
+        "CLEAN"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1868,
+      "findings": [],
+      "detectedText": "MENTAL HEALTH PLAN"
+    },
+    {
+      "id": "6qv5nYmGqLs",
+      "timestamp": 297,
+      "labels": [
+        "CLEAN",
+        "TEXT_RISK"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1714,
+      "findings": [],
+      "detectedText": "911 Call"
+    },
+    {
+      "id": "6qv5nYmGqLs",
+      "timestamp": 660,
+      "labels": [
+        "WEAPON_VISIBLE"
+      ],
+      "pass": false,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1403,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "_x5y8HEuuWI",
+      "timestamp": 284.5,
+      "labels": [
+        "OTHER_VISUAL_RISK"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1572,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "KTuYS857lOE",
+      "timestamp": 55,
+      "labels": [
+        "CLEAN",
+        "TEXT_RISK"
+      ],
+      "pass": false,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1500,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "KTuYS857lOE",
+      "timestamp": 113,
+      "labels": [
+        "WEAPON_VISIBLE"
+      ],
+      "pass": false,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1519,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "Wfoy_OvNDvw",
+      "timestamp": 45.5,
+      "labels": [
+        "CLEAN"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1511,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "jAAFacj17iE",
+      "timestamp": 442,
+      "labels": [
+        "CLEAN"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1587,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "8y-hasHqCK8",
+      "timestamp": 282.5,
+      "labels": [
+        "CLEAN",
+        "TEXT_RISK"
+      ],
+      "pass": false,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1589,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "11csVIXiFg4",
+      "timestamp": 9,
+      "labels": [
+        "TEXT_RISK"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 5336,
+      "findings": [
+        {
+          "category": "on_screen_text_risk",
+          "applies": true,
+          "confidence": 0.95,
+          "severity": "none",
+          "detail": "FAST CUT EDITING",
+          "requiresHumanReview": false
+        },
+        {
+          "category": "on_screen_text_risk",
+          "applies": true,
+          "confidence": 1,
+          "severity": "none",
+          "detail": "FAST CUT EDITING",
+          "requiresHumanReview": false
+        }
+      ],
+      "detectedText": "FAST CUT EDITING"
+    },
+    {
+      "id": "11csVIXiFg4",
+      "timestamp": 107.5,
+      "labels": [
+        "CLEAN",
+        "TEXT_RISK"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 2008,
+      "findings": [],
+      "detectedText": "Shaun of the Dead - Edgar Wright (2004)"
+    },
+    {
+      "id": "qojC09CbSQA",
+      "timestamp": 550,
+      "labels": [
+        "CLEAN",
+        "TEXT_RISK"
+      ],
+      "pass": false,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1530,
+      "findings": [],
+      "detectedText": ""
+    },
+    {
+      "id": "0BEDHqtb0aw",
+      "timestamp": 175.5,
+      "labels": [
+        "CLEAN"
+      ],
+      "pass": false,
+      "falsePositive": true,
+      "cacheHit": false,
+      "latencyMs": 5033,
+      "findings": [
+        {
+          "category": "on_screen_text_risk",
+          "applies": true,
+          "confidence": 1,
+          "severity": "none",
+          "detail": "CHEMIN PRODUCTION",
+          "requiresHumanReview": false
+        },
+        {
+          "category": "on_screen_text_risk",
+          "applies": true,
+          "confidence": 1,
+          "severity": "none",
+          "detail": "NASA",
+          "requiresHumanReview": false
+        }
+      ],
+      "detectedText": "CHEMIN PRODUCTION NASA"
+    },
+    {
+      "id": "AhANvBB9hz0",
+      "timestamp": 6.5,
+      "labels": [
+        "CLEAN",
+        "TEXT_RISK"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 1861,
+      "findings": [],
+      "detectedText": "Somethings the occasional graze or paper out might happen"
+    },
+    {
+      "id": "AhANvBB9hz0",
+      "timestamp": 30,
+      "labels": [
+        "INJURY_VISIBLE",
+        "TEXT_RISK"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 5160,
+      "findings": [
+        {
+          "category": "graphic_injury",
+          "applies": true,
+          "confidence": 0.95,
+          "severity": "minor",
+          "detail": "A small incision or wound is visible on the skin of an arm, which appears to be part of a medical procedure or demonstration.",
+          "requiresHumanReview": false
+        },
+        {
+          "category": "on_screen_text_risk",
+          "applies": true,
+          "confidence": 0.95,
+          "severity": "none",
+          "detail": "DRESS IT UP",
+          "requiresHumanReview": false
+        }
+      ],
+      "detectedText": "DRESS IT UP"
+    },
+    {
+      "id": "BQW9Zw0CsQ8",
+      "timestamp": 143,
+      "labels": [
+        "NUDITY_RISK",
+        "TEXT_RISK"
+      ],
+      "pass": true,
+      "falsePositive": false,
+      "cacheHit": false,
+      "latencyMs": 2420,
+      "findings": [],
+      "detectedText": "Modern-Day: Breathing During your breath: • rotate your head directly • your cheek should remain at water level"
+    }
+  ],
+  "resolution": [
+    {
+      "360": {
+        "pass": false,
+        "findings": [],
+        "detectedText": ""
+      },
+      "480": {
+        "pass": false,
+        "findings": [],
+        "detectedText": ""
+      },
+      "id": "6qv5nYmGqLs",
+      "timestamp": 660
+    },
+    {
+      "360": {
+        "pass": false,
+        "findings": [],
+        "detectedText": ""
+      },
+      "480": {
+        "pass": false,
+        "findings": [],
+        "detectedText": ""
+      },
+      "id": "qojC09CbSQA",
+      "timestamp": 550
+    },
+    {
+      "360": {
+        "pass": true,
+        "findings": [
+          {
+            "category": "graphic_injury",
+            "applies": true,
+            "confidence": 0.95,
+            "severity": "minor",
+            "detail": "A small incision or wound is visible on the skin of an arm, which appears to be part of a medical procedure or demonstration.",
+            "requiresHumanReview": false
+          },
+          {
+            "category": "on_screen_text_risk",
+            "applies": true,
+            "confidence": 0.95,
+            "severity": "none",
+            "detail": "DRESS IT UP",
+            "requiresHumanReview": false
+          }
+        ],
+        "detectedText": "DRESS IT UP"
+      },
+      "480": {
+        "pass": true,
+        "findings": [
+          {
+            "category": "graphic_injury",
+            "applies": true,
+            "confidence": 0.95,
+            "severity": "minor",
+            "detail": "A small surgical incision is visible on the skin of an arm, which appears to be part of a medical procedure or demonstration.",
+            "requiresHumanReview": false
+          },
+          {
+            "category": "on_screen_text_risk",
+            "applies": true,
+            "confidence": 0.95,
+            "severity": "none",
+            "detail": "DRESS IT UP",
+            "requiresHumanReview": false
+          }
+        ],
+        "detectedText": "DRESS IT UP"
+      },
+      "id": "AhANvBB9hz0",
+      "timestamp": 30
+    }
+  ],
+  "vlmLatency": {
+    "coldFirstMs": 1618,
+    "warmMeanMs": 2454,
+    "warmP50Ms": 1714,
+    "warmP95Ms": 5336,
+    "totalMs": 45796
+  },
+  "cache": {
+    "videos": 3,
+    "secondRunHits": 3,
+    "secondRunVlmCalls": 0,
+    "firstRunVlmMs": 8185,
+    "secondRunMs": 505
+  },
+  "cancellation": {
+    "processCancelled": true,
+    "inferenceCancelCode": "ANALYSIS_CANCELLED",
+    "tempClean": true
+  },
+  "longRealVideo": {
+    "id": "6qv5nYmGqLs",
+    "durationSeconds": 1076,
+    "runtimeMs": 105863,
+    "framesSampled": 162,
+    "framesDeduplicated": 70,
+    "framesCheapScanned": 92,
+    "framesEscalated": 45,
+    "ocrCalls": 13,
+    "vlmCalls": 45,
+    "visualCacheHits": 0,
+    "visualAnalysisMs": 105862
+  },
+  "briefEvents": [
+    {
+      "id": "wxEpPin8MWw",
+      "band": "1-2s",
+      "baselineHit": true,
+      "aggressiveHit": true
+    },
+    {
+      "id": "6qv5nYmGqLs",
+      "band": "2-5s",
+      "baselineHit": true,
+      "aggressiveHit": true
+    },
+    {
+      "id": "KTuYS857lOE",
+      "band": "2-5s",
+      "baselineHit": true,
+      "aggressiveHit": true
+    },
+    {
+      "id": "KTuYS857lOE",
+      "band": "2-5s",
+      "baselineHit": true,
+      "aggressiveHit": true
+    },
+    {
+      "id": "11csVIXiFg4",
+      "band": "<1s",
+      "baselineHit": true,
+      "aggressiveHit": true
+    },
+    {
+      "id": "qojC09CbSQA",
+      "band": "1-2s",
+      "baselineHit": true,
+      "aggressiveHit": true
+    }
+  ],
+  "calibrationAfter": {
+    "dedupeHammingDistance": 4,
+    "thresholdVersion": "visual-thresholds-v2",
+    "longRealVideo": {
+      "id": "6qv5nYmGqLs",
+      "durationSeconds": 1076,
+      "runtimeMs": 141805,
+      "framesSampled": 162,
+      "framesDeduplicated": 43,
+      "framesCheapScanned": 119,
+      "framesEscalated": 57,
+      "ocrCalls": 14,
+      "vlmCalls": 57,
+      "visualCacheHits": 0
+    },
+    "benignOcrFindingFilter": "Provider on_screen_text_risk findings are retained only when deterministic OCR risk matching confirms risky text."
+  },
+  "failureCounts": {
+    "SAMPLING": 0,
+    "DEDUPE": 11,
+    "ESCALATION": 598,
+    "VLM": 8,
+    "OCR": 5,
+    "POLICY_MAPPING": 0
+  }
+}

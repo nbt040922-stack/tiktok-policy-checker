@@ -6,7 +6,7 @@
     "frameHeight": 360,
     "sceneThreshold": 0.32,
     "sceneWindowSeconds": 2.5,
-    "dedupeHammingDistance": 7,
+    "dedupeHammingDistance": 4,
     "redRatioThreshold": 0.1,
     "skinRatioThreshold": 0.58,
     "edgeDensityThreshold": 0.24,
@@ -19,7 +19,7 @@
     "timeoutMs": 180000,
     "cacheMaxEntries": 20000,
     "detectorVersion": "ffmpeg-rgb-v1",
-    "thresholdVersion": "visual-thresholds-v1",
+    "thresholdVersion": "visual-thresholds-v2",
     "modelVersion": "gemma4-findings-v1"
   }
 }

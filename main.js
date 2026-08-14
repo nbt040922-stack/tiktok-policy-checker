@@ -257,8 +257,8 @@ async function downloadVisualProxy(url, workDir, signal) {
   return youtubeAuth.withTemporaryCookies(async cookiesPath => {
     const outputTemplate = path.join(workDir, 'proxy.%(ext)s');
     const args = [
-      ...buildYtDlpBaseArgs({ paths: binaryPaths, cookiesPath }), '--no-playlist', '--no-part',
-      '-f', 'bestvideo[height<=360]/best[height<=360]/worst', '--output', outputTemplate, url
+      ...buildYtDlpBaseArgs({ paths: binaryPaths, cookiesPath, jsRuntime: false }), '--no-playlist', '--no-part',
+      '-f', '18/best[height<=360]/bestvideo[height<=360]/worst', '--output', outputTemplate, url
     ];
     const result = await runProcess(ytdlpPath, args, { env: spawnEnv, timeoutMs: 0, signal });
     if (!result.ok) throw Object.assign(new Error(result.error || result.stderr || 'Visual proxy download failed.'), { cancelled: result.cancelled });
