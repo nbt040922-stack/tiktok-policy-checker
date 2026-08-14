@@ -109,3 +109,7 @@ The first real cancel run revealed a Windows file-release race: `runProcess` rep
 The current architecture cannot repair a visual model that misses a weapon after receiving the correct frame at both tested resolutions. Phase 5.2 should begin with a focused weapon/small-object detector evaluation and a focused OCR evaluation, measured against the same manifest. It must not weaken deterministic policy mapping or treat object presence as a violation.
 
 No Phase 5.2 dependency or model is added here.
+
+## Phase 5.2 follow-up
+
+Phase 5.2 later tested two Apache-2.0 open-vocabulary detectors against the same weapon frames. OWLv2 missed the bodycam case. Grounding DINO could only admit the bodycam candidate at thresholds that produced a higher-confidence microphone false positive and unacceptable runtime. Phase 5.1 therefore remains historically **FAIL — MODEL_GAP**; it has not been rewritten as a pass. See `POLICY_ENGINE_PHASE5_2_EVAL.md`.

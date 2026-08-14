@@ -1,0 +1,65 @@
+{
+  "generatedAt": "2026-08-15T03:44:19.3822835+07:00",
+  "status": ["MODEL_GAP", "PERFORMANCE_GAP"],
+  "sourceMediaCommitted": false,
+  "knownCases": [
+    { "id": "6qv5nYmGqLs", "timestamp": 660, "label": "WEAPON_VISIBLE", "context": "bodycam evidence inside a news briefing" },
+    { "id": "KTuYS857lOE", "timestamp": 113, "label": "WEAPON_VISIBLE", "context": "firearm safety demonstration" }
+  ],
+  "candidates": [
+    {
+      "name": "google/owlv2-base-patch16-ensemble",
+      "license": "Apache-2.0",
+      "weightBytes": 620000000,
+      "loadMs": 22528,
+      "cudaAllocatedMiB": 303,
+      "results": [
+        { "case": "bodycam-660", "weaponDetected": false, "highestWeaponScore": null },
+        { "case": "glock-113", "weaponDetected": true, "objectClass": "handgun", "confidence": 0.4395, "bbox": [710.0, 76.1, 900.0, 265.2] }
+      ]
+    },
+    {
+      "name": "IDEA-Research/grounding-dino-tiny",
+      "license": "Apache-2.0",
+      "weightBytes": 689359096,
+      "loadMs": 1830,
+      "cudaAllocatedMiB": 660,
+      "singlePromptBatch": { "frames": 15, "runtimeMs": 126509, "meanMsPerFrame": 8434, "torchMaxAllocatedMiB": 19978 },
+      "positiveScores": {
+        "bodycam-650": 0.2289,
+        "bodycam-655": 0.3635,
+        "bodycam-660": 0.3998,
+        "bodycam-665": 0.3927,
+        "glock-112": 0.4697,
+        "glock-113": 0.5799,
+        "glock-114": 0.6285,
+        "glock-122": 0.4584
+      },
+      "negativeControlScores": {
+        "press-conference-microphone": 0.6454,
+        "phone": 0.4339,
+        "seattle-bodycam-clean": 0.3814,
+        "swimming": 0.3386,
+        "glock-interview-clean": 0.333,
+        "nasa-action-camera": 0.3155,
+        "crowd": 0.2721
+      },
+      "gate": {
+        "atOrAbove045": "Bodycam miss and microphone false positive",
+        "atOrAbove030": "Bodycam candidate overlaps multiple negative false positives",
+        "bodycamLocalizationReliable": false,
+        "glockLocalizationReliable": true
+      }
+    }
+  ],
+  "rejectedCandidate": {
+    "name": "Ultralytics YOLO-World",
+    "reason": "AGPL-3.0 code/model terms conflict with the repository's current ISC distribution unless the project is relicensed or an enterprise license is obtained."
+  },
+  "ocr": {
+    "candidate": "RapidOCR 3.9.2",
+    "license": "Apache-2.0",
+    "evaluated": false,
+    "reason": "The mandatory known-weapon detector gate failed first; Phase 5.2 stop condition requires no further integration or broad evaluation."
+  }
+}
