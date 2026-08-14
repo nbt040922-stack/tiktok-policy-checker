@@ -47,7 +47,7 @@ function buildYtDlpBaseArgs({ paths, cookiesPath, cookies = true, jsRuntime = tr
   return args;
 }
 
-function runProcess(executable, args, { env = process.env, timeoutMs = 30000 } = {}) {
+function runProcess(executable, args, { env = process.env, timeoutMs = 30000, signal } = {}) {
   return new Promise((resolve) => {
     let stdout = '';
     let stderr = '';
@@ -59,7 +59,13 @@ function runProcess(executable, args, { env = process.env, timeoutMs = 30000 } =
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      signal?.removeEventListener('abort', abort);
       resolve({ stdout: stdout.trim(), stderr: stderr.trim(), ...result });
+    };
+
+    const abort = () => {
+      try { child?.kill(); } catch (_) {}
+      finish({ ok: false, code: null, error: 'Operation cancelled', cancelled: true });
     };
 
     try {
@@ -73,6 +79,8 @@ function runProcess(executable, args, { env = process.env, timeoutMs = 30000 } =
     child.stderr.on('data', data => { stderr += data.toString(); });
     child.on('error', error => finish({ ok: false, code: null, error: error.message }));
     child.on('close', code => finish({ ok: code === 0, code, error: code === 0 ? null : (stderr.trim() || `Exited with code ${code}`) }));
+    if (signal?.aborted) return abort();
+    signal?.addEventListener('abort', abort, { once: true });
 
     if (timeoutMs > 0) {
       timer = setTimeout(() => {

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test",
+    "benchmark:qwen": "node scripts/run-policy-judge-benchmark.js",
     "test:fresh-install": "powershell -ExecutionPolicy Bypass -File scripts/test-fresh-install.ps1",
     "preflight": "node scripts/preflight.js",
     "build": "electron-builder",

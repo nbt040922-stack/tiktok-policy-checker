@@ -8,7 +8,8 @@ const {
   buildYtDlpBaseArgs,
   extractFinalPath,
   resolveBinaryPaths,
-  runEngineDiagnostics
+  runEngineDiagnostics,
+  runProcess
 } = require('../engine-runtime');
 
 const appDir = path.resolve(__dirname, '..');
@@ -31,6 +32,15 @@ test('final path reporting preserves Unicode exactly', () => {
   const expected = String.raw`C:\動画\日本語 한국어 Tiếng Việt 🎵.mp4`;
   assert.equal(extractFinalPath(`${FINAL_PATH_PREFIX}${expected}`), expected);
   assert.equal(extractFinalPath('[download] 100%'), null);
+});
+
+test('abort signal terminates an active subprocess', async () => {
+  const controller = new AbortController();
+  const running = runProcess(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { timeoutMs: 0, signal: controller.signal });
+  setTimeout(() => controller.abort(), 20);
+  const result = await running;
+  assert.equal(result.cancelled, true);
+  assert.match(result.error, /cancelled/);
 });
 
 test('bundled engines execute successfully', async () => {

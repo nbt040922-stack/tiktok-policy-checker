@@ -66,13 +66,14 @@ function segmentRow(segment) {
                 <strong>${escapeHtml(segment.startLabel)} → ${escapeHtml(segment.endLabel)}</strong>
                 <span>Duration: ${formatDuration(segment.endSeconds - segment.startSeconds)}</span>
                 ${segment.reason ? `<small>${escapeHtml(segment.reason)}</small>` : ''}
+                ${segment.policyIds?.length ? `<small>Policy: ${escapeHtml(segment.policyIds.join(', '))}</small>` : ''}
             </div>
             ${decisionBadge(segment.decision)}
         </article>`;
 }
 
 function renderSuccess(result) {
-    const riskySections = result.segments.filter(segment => segment.decision === 'REMOVE');
+    const riskySections = result.segments.filter(segment => segment.decision !== 'KEEP');
     policyResult.className = 'policy-result policy-success';
     policyResult.innerHTML = `
         <section class="result-summary glass-panel">
@@ -89,7 +90,7 @@ function renderSuccess(result) {
         </section>
         <section class="result-group">
             <h2>Risky Sections</h2>
-            <div class="glass-panel">${riskySections.length ? riskySections.map(segmentRow).join('') : '<p class="empty-result">No REMOVE sections in this temporary analysis.</p>'}</div>
+            <div class="glass-panel">${riskySections.length ? riskySections.map(segmentRow).join('') : '<p class="empty-result">No REVIEW or REMOVE sections found.</p>'}</div>
         </section>`;
 }
 

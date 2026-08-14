@@ -139,6 +139,7 @@
                 : await api.analyzeYouTubeVideo(url, requestId);
             if (!options.ingest && !response?.ok) throw Object.assign(new Error(response?.error?.message || 'Unable to analyze video.'), { code: response?.error?.code || 'INGESTION_ERROR' });
             const ingestion = options.ingest ? response : response.data;
+            if (!options.ingest && ingestion?.analysisVersion === 'local-qwen-v1') return ingestion;
             onStageChange('policy');
             const result = buildResult(ingestion);
             onStageChange('safe_windows');

@@ -1,0 +1,14 @@
+[
+  { "id": "clean-political-commentary", "text": "I disagree with the proposed tax policy and explain why.", "expectedDecision": "KEEP", "expectedCategories": ["civic_integrity"] },
+  { "id": "direct-targeted-insult", "text": "A direct degrading insult aimed at a private individual.", "expectedDecision": "REMOVE", "expectedCategories": ["harassment"] },
+  { "id": "quoted-insult-news", "text": "The reporter quotes an insult while condemning the harassment.", "expectedDecision": "KEEP", "expectedCategories": ["harassment"] },
+  { "id": "self-harm-prevention", "text": "A recovery advocate discusses warning signs and where to seek help without methods.", "expectedDecision": "KEEP", "expectedCategories": ["self_harm"] },
+  { "id": "self-harm-instruction", "text": "The speaker gives step-by-step instructions for a self-harm method.", "expectedDecision": "REMOVE", "expectedCategories": ["self_harm", "suicide"] },
+  { "id": "graphic-event-description", "text": "The narrator gives a detailed verbal description of a severe graphic injury.", "expectedDecision": "REVIEW", "expectedCategories": ["graphic_content"] },
+  { "id": "weapon-documentary", "text": "A documentary explains the history of a weapon without facilitating its use.", "expectedDecision": "REVIEW", "expectedCategories": ["weapons"] },
+  { "id": "violent-threat", "text": "The speaker makes a direct credible threat of physical violence.", "expectedDecision": "REMOVE", "expectedCategories": ["violence"] },
+  { "id": "misinformation-claim", "text": "The speaker presents a fabricated dangerous health cure as verified fact.", "expectedDecision": "REMOVE", "expectedCategories": ["misinformation"] },
+  { "id": "misinformation-neutral", "text": "An educator debunks a misinformation claim and recommends professional advice.", "expectedDecision": "KEEP", "expectedCategories": ["misinformation"] },
+  { "id": "sexual-education", "text": "A medical educator discusses adult sexual health without explicit depiction.", "expectedDecision": "KEEP", "expectedCategories": ["sexual_content"] },
+  { "id": "unoriginal-discussion", "text": "A creator explains why reposting watermarked clips is unoriginal content.", "expectedDecision": "KEEP", "expectedCategories": ["unoriginal_content"] }
+]

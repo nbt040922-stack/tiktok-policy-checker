@@ -6,6 +6,9 @@ const { DownloadManager, JOB_STATES, PROGRESS_PREFIX, parseYtDlpProgress } = req
 const { ContentOpsBridge } = require('./contentops-bridge');
 const { YouTubeAuthSession, isAuthRequired, redactSensitive } = require('./auth-session');
 const { YouTubeIngestionService, classifyIngestionError } = require('./services/youtube');
+const { JudgmentCache, PolicyJudgeService, loadPolicyJudgeConfig } = require('./services/policyJudge');
+const { LocalQwenProvider, PolicyJudgeError } = require('./services/policyJudge/provider');
+const { loadPolicySet } = require('./services/policyKnowledge');
 const {
   FINAL_PATH_PREFIX,
   bootstrapRuntime,
@@ -30,7 +33,9 @@ let downloadManager = null;
 let youtubeAuth = null;
 let youtubeIngestion = null;
 let contentOpsBridge = null;
+let policyJudge = null;
 const latestAnalysisRequests = new Map();
+const activeAnalysisControllers = new Map();
 const MAX_CONCURRENT_DOWNLOADS = 2;
 
 // Dynamic Binary Path Resolver
@@ -216,11 +221,11 @@ ipcMain.on('cancel-all-downloads', () => {
   downloadManager?.cancelAll('user');
 });
 
-async function fetchMetadataWithCookies(url, cookiesPath) {
+async function fetchMetadataWithCookies(url, cookiesPath, signal) {
   if (!ensureBinaryExists(ytdlpPath)) throw new Error('yt-dlp.exe missing');
     const args = [...buildYtDlpBaseArgs({ paths: binaryPaths, cookiesPath }), '--no-playlist', '--skip-download', '--dump-single-json', url];
     const result = await executeWithRecovery({
-      operation: () => runProcess(ytdlpPath, args, { env: spawnEnv, timeoutMs: 0 }),
+      operation: () => runProcess(ytdlpPath, args, { env: spawnEnv, timeoutMs: 0, signal }),
       recover: performSafeUpdate,
       trigger: 'METADATA_FAILURE',
       logger: recoveryLogger
@@ -245,6 +250,9 @@ async function fetchMetadata(url) {
 
 ipcMain.handle('analyze-youtube-video', async (event, { url, requestId }) => {
   const senderId = event.sender.id;
+  activeAnalysisControllers.get(senderId)?.abort();
+  const controller = new AbortController();
+  activeAnalysisControllers.set(senderId, controller);
   latestAnalysisRequests.set(senderId, requestId);
   const onStage = stage => {
     if (latestAnalysisRequests.get(senderId) === requestId && !event.sender.isDestroyed()) {
@@ -252,16 +260,23 @@ ipcMain.handle('analyze-youtube-video', async (event, { url, requestId }) => {
     }
   };
   try {
-    const data = await youtubeAuth.withTemporaryCookies(cookiesPath =>
-      youtubeIngestion.ingest(url, { cookiesPath, onStage })
+    const health = await policyJudge.healthCheck({ signal: controller.signal });
+    if (!health.ok) throw new PolicyJudgeError(health.code, health.message);
+    const ingestion = await youtubeAuth.withTemporaryCookies(cookiesPath =>
+      youtubeIngestion.ingest(url, { cookiesPath, onStage, signal: controller.signal })
     );
+    const data = await policyJudge.analyzeIngestion(ingestion, { onStage, signal: controller.signal, skipHealthCheck: true });
+    logToFile(`Policy judge metrics: ${JSON.stringify(data.metrics)}`);
     return { ok: true, data };
   } catch (error) {
-    const safeError = classifyIngestionError(error);
-    logToFile(`YouTube ingestion failed: ${safeError.code}`);
+    const safeError = error instanceof PolicyJudgeError
+      ? error
+      : classifyIngestionError(error);
+    logToFile(`Video analysis failed: ${safeError.code}`);
     return { ok: false, error: { code: safeError.code, message: safeError.message } };
   } finally {
     if (latestAnalysisRequests.get(senderId) === requestId) latestAnalysisRequests.delete(senderId);
+    if (activeAnalysisControllers.get(senderId) === controller) activeAnalysisControllers.delete(senderId);
   }
 });
 
@@ -455,6 +470,13 @@ app.whenReady().then(async () => {
   });
   await youtubeAuth.initialize();
   youtubeIngestion = new YouTubeIngestionService({ getRawMetadata: fetchMetadataWithCookies });
+  const judgeConfig = loadPolicyJudgeConfig();
+  policyJudge = new PolicyJudgeService({
+    repository: loadPolicySet(),
+    config: judgeConfig,
+    provider: new LocalQwenProvider(judgeConfig),
+    cache: new JudgmentCache({ filePath: path.join(app.getPath('userData'), 'policy-judge-cache.json'), maxEntries: judgeConfig.cacheMaxEntries })
+  });
   if (fs.existsSync(legacyCookiesPath)) {
     logToFile('Legacy cookies.txt retained but disabled; dedicated YouTube session is primary.');
   }
@@ -505,4 +527,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('before-quit', () => { void contentOpsBridge?.stop(); });
+app.on('before-quit', () => {
+  for (const controller of activeAnalysisControllers.values()) controller.abort();
+  void contentOpsBridge?.stop();
+});

@@ -97,6 +97,7 @@ test('main process reuses auth and fetches no video for ingestion', () => {
   assert.match(main, /youtubeAuth\.withTemporaryCookies/);
   assert.match(main, /'--no-playlist', '--skip-download', '--dump-single-json'/);
   assert.match(main, /ipcMain\.handle\('analyze-youtube-video'/);
+  assert.match(main, /activeAnalysisControllers\.get\(senderId\)\?\.abort\(\)/);
   assert.match(preload, /analyzeYouTubeVideo/);
   assert.match(preload, /onAnalysisStage/);
 });

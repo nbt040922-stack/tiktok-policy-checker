@@ -1,0 +1,22 @@
+{
+  "policyJudge": {
+    "provider": "local-qwen",
+    "baseUrl": "http://127.0.0.1:11434",
+    "model": "qwen3:14b",
+    "modelDisplayName": "Qwen3-14B",
+    "quantization": "Q4_K_M",
+    "temperature": 0.1,
+    "topP": 0.9,
+    "maxOutputTokens": 500,
+    "candidatePolicies": 5,
+    "contextSegments": 1,
+    "preFilterMinScore": 1,
+    "keepConfidence": 0.8,
+    "removeConfidence": 0.85,
+    "timeoutMs": 60000,
+    "maxRetries": 1,
+    "concurrency": 1,
+    "mergeGapSeconds": 2.5,
+    "cacheMaxEntries": 10000
+  }
+}
