@@ -2,7 +2,7 @@
 
 ## Status
 
-The local-judge integration is implemented. Real Qwen evaluation is blocked because `qwen3:14b` is not installed. The application does not download it automatically.
+The local-judge integration is implemented and `qwen3:14b` was installed after explicit user authorization. Real benchmark and YouTube E2E evaluation completed without OOM, but Phase 4 remains blocked on quality and throughput. See `POLICY_ENGINE_PHASE4_QWEN_EVAL.md` for measured results.
 
 ## Architecture
 
@@ -35,7 +35,7 @@ ollama pull qwen3:14b
 ollama serve
 ```
 
-The application never runs `ollama pull`. Before YouTube ingestion it checks `/api/tags`; if the service or model is absent, analysis fails immediately with `Qwen Policy Judge is not running` or `Local model qwen3:14b is not installed`.
+The application itself never runs `ollama pull`. The model used for evaluation was installed as a separate, explicitly authorized operator action. Before YouTube ingestion the app checks `/api/tags`; if the service or model is absent, analysis fails immediately with `Qwen Policy Judge is not running` or `Local model qwen3:14b is not installed`.
 
 ## Configuration
 
@@ -92,4 +92,4 @@ Run after explicit model installation and sufficient free VRAM:
 npm run benchmark:qwen
 ```
 
-The runner uses 12 short synthetic, human-labeled examples and reports agreement, false KEEP, false REMOVE, REVIEW rate, timings, token counts, and GPU memory samples. Expectations describe this engine's desired behavior, not official TikTok moderation outcomes.
+The runner uses 12 short synthetic, human-labeled examples and reports agreement, false KEEP, false REMOVE, REVIEW rate, timings, token counts, and GPU memory samples. Expectations describe this engine's desired behavior, not official TikTok moderation outcomes. The 2026-08-14 run completed at 50% agreement with one false KEEP, one false REMOVE, and one cold-start timeout; these results require calibration before Phase 4 can pass.
