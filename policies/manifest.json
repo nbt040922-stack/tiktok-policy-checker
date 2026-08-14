@@ -1,0 +1,15 @@
+{
+  "provider": "TikTok",
+  "schemaVersion": "1.0.0",
+  "policySetVersion": "uninitialized",
+  "availableVersions": [],
+  "effectiveDate": null,
+  "lastUpdated": null,
+  "sources": [],
+  "ruleCount": 0,
+  "domains": [
+    "community_guidelines",
+    "fyp_eligibility",
+    "monetization"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "SYNTH_SELF_HARM_001",
+  "domain": "community_guidelines",
+  "category": "self_harm",
+  "subcategory": "synthetic_depiction",
+  "title": "Synthetic self-harm fixture",
+  "summary": "Synthetic record for repository and retrieval tests. Not TikTok policy.",
+  "ruleText": "Synthetic test rule only. This text is not sourced from or attributed to TikTok.",
+  "outcome": {
+    "postability": "PROHIBIT",
+    "fypEligibility": "RESTRICT",
+    "monetization": "RESTRICT"
+  },
+  "severity": "high",
+  "contextualAllowances": ["Synthetic educational-context allowance"],
+  "exceptions": [],
+  "examplesAllowed": ["Synthetic recovery discussion example"],
+  "examplesRestricted": ["Synthetic ambiguous depiction example"],
+  "examplesProhibited": ["Synthetic instructional depiction example"],
+  "keywords": ["self harm", "injury", "recovery"],
+  "source": {
+    "document": "Synthetic test fixture — not TikTok policy",
+    "section": "Synthetic self-harm section",
+    "url": null,
+    "effectiveDate": null,
+    "retrievedDate": null
+  },
+  "version": "fixture-1",
+  "synthetic": true
+}

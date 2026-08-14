@@ -30,6 +30,7 @@
       "!resources/bin{,/**/*}",
       "!test{,/**/*}",
       "!scripts{,/**/*}",
+      "!policies/fixtures{,/**/*}",
       "!PHASE*.md",
       "!dist{,/**/*}",
       "!dist-*{,/**/*}",

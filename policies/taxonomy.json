@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "description": "Internal classification taxonomy only. Category IDs do not claim equivalence to official TikTok policy sections.",
+  "categories": [
+    { "id": "violence", "label": "Violence" },
+    { "id": "graphic_content", "label": "Graphic content" },
+    { "id": "self_harm", "label": "Self-harm" },
+    { "id": "suicide", "label": "Suicide" },
+    { "id": "harassment", "label": "Harassment" },
+    { "id": "bullying", "label": "Bullying" },
+    { "id": "hate_speech", "label": "Hate speech" },
+    { "id": "sexual_content", "label": "Sexual content" },
+    { "id": "nudity", "label": "Nudity" },
+    { "id": "minor_safety", "label": "Minor safety" },
+    { "id": "dangerous_activities", "label": "Dangerous activities" },
+    { "id": "weapons", "label": "Weapons" },
+    { "id": "regulated_goods", "label": "Regulated goods" },
+    { "id": "drugs", "label": "Drugs" },
+    { "id": "misinformation", "label": "Misinformation" },
+    { "id": "civic_integrity", "label": "Civic integrity" },
+    { "id": "privacy", "label": "Privacy" },
+    { "id": "personal_information", "label": "Personal information" },
+    { "id": "illegal_activity", "label": "Illegal activity" },
+    { "id": "fraud", "label": "Fraud" },
+    { "id": "spam", "label": "Spam" },
+    { "id": "profanity", "label": "Profanity" },
+    { "id": "shocking_content", "label": "Shocking content" }
+  ]
+}

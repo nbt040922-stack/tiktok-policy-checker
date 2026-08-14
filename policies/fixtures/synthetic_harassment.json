@@ -1,0 +1,30 @@
+{
+  "id": "SYNTH_HARASSMENT_001",
+  "domain": "community_guidelines",
+  "category": "harassment",
+  "subcategory": "synthetic_targeted_abuse",
+  "title": "Synthetic harassment fixture",
+  "summary": "Synthetic record for deterministic candidate matching. Not TikTok policy.",
+  "ruleText": "Synthetic test rule about targeted insults. This text is not an official platform rule.",
+  "outcome": {
+    "postability": "RESTRICT",
+    "fypEligibility": "RESTRICT",
+    "monetization": "UNKNOWN"
+  },
+  "severity": "medium",
+  "contextualAllowances": [],
+  "exceptions": ["Synthetic counterspeech exception"],
+  "examplesAllowed": [],
+  "examplesRestricted": ["Synthetic targeted insult example"],
+  "examplesProhibited": [],
+  "keywords": ["targeted insult", "harassment", "bullying"],
+  "source": {
+    "document": "Synthetic test fixture — not TikTok policy",
+    "section": "Synthetic harassment section",
+    "url": null,
+    "effectiveDate": null,
+    "retrievedDate": null
+  },
+  "version": "fixture-1",
+  "synthetic": true
+}

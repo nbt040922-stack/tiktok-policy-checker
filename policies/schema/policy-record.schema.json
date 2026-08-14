@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.tiktok-policy-checker/policy-record.schema.json",
+  "title": "Policy Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "domain", "category", "subcategory", "title", "summary", "ruleText",
+    "outcome", "severity", "contextualAllowances", "exceptions", "examplesAllowed",
+    "examplesRestricted", "examplesProhibited", "keywords", "source", "version", "synthetic"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[A-Z0-9_]+$" },
+    "domain": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "category": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "subcategory": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "title": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "ruleText": { "type": "string", "minLength": 1 },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["postability", "fypEligibility", "monetization"],
+      "properties": {
+        "postability": { "enum": ["ALLOW", "RESTRICT", "PROHIBIT", "UNKNOWN"] },
+        "fypEligibility": { "enum": ["ALLOW", "RESTRICT", "PROHIBIT", "UNKNOWN"] },
+        "monetization": { "enum": ["ALLOW", "RESTRICT", "PROHIBIT", "UNKNOWN"] }
+      }
+    },
+    "severity": { "enum": ["low", "medium", "high", "critical", "unknown"] },
+    "contextualAllowances": { "$ref": "#/$defs/stringArray" },
+    "exceptions": { "$ref": "#/$defs/stringArray" },
+    "examplesAllowed": { "$ref": "#/$defs/stringArray" },
+    "examplesRestricted": { "$ref": "#/$defs/stringArray" },
+    "examplesProhibited": { "$ref": "#/$defs/stringArray" },
+    "keywords": { "$ref": "#/$defs/stringArray" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["document", "section", "url", "effectiveDate", "retrievedDate"],
+      "properties": {
+        "document": { "type": "string", "minLength": 1 },
+        "section": { "type": "string", "minLength": 1 },
+        "url": { "type": ["string", "null"] },
+        "effectiveDate": { "type": ["string", "null"], "format": "date" },
+        "retrievedDate": { "type": ["string", "null"], "format": "date" }
+      }
+    },
+    "version": { "type": "string", "minLength": 1 },
+    "synthetic": { "type": "boolean" }
+  },
+  "$defs": {
+    "stringArray": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    }
+  }
+}
