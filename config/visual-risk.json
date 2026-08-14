@@ -1,0 +1,25 @@
+{
+  "visualRisk": {
+    "enabled": true,
+    "proxyHeight": 360,
+    "frameWidth": 640,
+    "frameHeight": 360,
+    "sceneThreshold": 0.32,
+    "sceneWindowSeconds": 2.5,
+    "dedupeHammingDistance": 7,
+    "redRatioThreshold": 0.1,
+    "skinRatioThreshold": 0.58,
+    "edgeDensityThreshold": 0.24,
+    "textEdgeThreshold": 0.015,
+    "detectorConfidence": 0.58,
+    "visualPolicyConfidence": 0.85,
+    "model": "gemma4:12b",
+    "modelDisplayName": "Gemma 4 12B",
+    "baseUrl": "http://127.0.0.1:11434",
+    "timeoutMs": 180000,
+    "cacheMaxEntries": 20000,
+    "detectorVersion": "ffmpeg-rgb-v1",
+    "thresholdVersion": "visual-thresholds-v1",
+    "modelVersion": "gemma4-findings-v1"
+  }
+}

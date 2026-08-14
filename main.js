@@ -10,6 +10,9 @@ const { ModelFindingCache, PolicyJudgeService, loadPolicyJudgeConfig } = require
 const { LocalQwenProvider, PolicyJudgeError } = require('./services/policyJudge/provider');
 const { loadPolicySet } = require('./services/policyKnowledge');
 const {
+  VisualFindingCache, VisualMediaService, VisualRiskService, VisualSamplingService, loadVisualRiskConfig
+} = require('./services/visualRisk');
+const {
   FINAL_PATH_PREFIX,
   bootstrapRuntime,
   buildYtDlpBaseArgs,
@@ -34,6 +37,8 @@ let youtubeAuth = null;
 let youtubeIngestion = null;
 let contentOpsBridge = null;
 let policyJudge = null;
+let visualRisk = null;
+let visualMedia = null;
 const latestAnalysisRequests = new Map();
 const activeAnalysisControllers = new Map();
 const MAX_CONCURRENT_DOWNLOADS = 2;
@@ -248,6 +253,21 @@ async function fetchMetadata(url) {
   return youtubeAuth.withTemporaryCookies(cookiesPath => fetchMetadataWithCookies(url, cookiesPath));
 }
 
+async function downloadVisualProxy(url, workDir, signal) {
+  return youtubeAuth.withTemporaryCookies(async cookiesPath => {
+    const outputTemplate = path.join(workDir, 'proxy.%(ext)s');
+    const args = [
+      ...buildYtDlpBaseArgs({ paths: binaryPaths, cookiesPath }), '--no-playlist', '--no-part',
+      '-f', 'bestvideo[height<=360]/best[height<=360]/worst', '--output', outputTemplate, url
+    ];
+    const result = await runProcess(ytdlpPath, args, { env: spawnEnv, timeoutMs: 0, signal });
+    if (!result.ok) throw Object.assign(new Error(result.error || result.stderr || 'Visual proxy download failed.'), { cancelled: result.cancelled });
+    const proxy = fs.readdirSync(workDir).map(name => path.join(workDir, name)).find(file => /^proxy\./.test(path.basename(file)) && !file.endsWith('.part'));
+    if (!proxy) throw new Error('Visual proxy download produced no media file.');
+    return proxy;
+  });
+}
+
 ipcMain.handle('analyze-youtube-video', async (event, { url, requestId }) => {
   const senderId = event.sender.id;
   activeAnalysisControllers.get(senderId)?.abort();
@@ -265,7 +285,23 @@ ipcMain.handle('analyze-youtube-video', async (event, { url, requestId }) => {
     const ingestion = await youtubeAuth.withTemporaryCookies(cookiesPath =>
       youtubeIngestion.ingest(url, { cookiesPath, onStage, signal: controller.signal })
     );
-    const data = await policyJudge.analyzeIngestion(ingestion, { onStage, signal: controller.signal, skipHealthCheck: true });
+    const textResult = await policyJudge.analyzeIngestion(ingestion, { onStage, signal: controller.signal, skipHealthCheck: true, deferCompletion: true });
+    let data;
+    try {
+      onStage('visual_proxy');
+      const visualResult = await visualMedia.withProxy(ingestion, { signal: controller.signal }, (proxyPath, workDir) =>
+        visualRisk.analyze(proxyPath, workDir, ingestion, textResult.segmentJudgments, { onStage, signal: controller.signal })
+      );
+      data = policyJudge.applyVisualAnalysis(textResult, visualResult, visualRisk.config, { onStage });
+    } catch (visualError) {
+      if (controller.signal.aborted || visualError.code === 'ANALYSIS_CANCELLED' || visualError.cancelled) throw visualError;
+      logToFile(`Visual analysis unavailable: ${visualError.code || visualError.message}`);
+      data = policyJudge.applyVisualAnalysis(textResult, {
+        visualStatus: 'UNAVAILABLE', visualError: visualError.code || 'VISUAL_SUBSYSTEM_UNAVAILABLE',
+        framesBySegment: ingestion.transcriptSegments.map(() => []),
+        metrics: { framesSampled: 0, framesDeduplicated: 0, framesCheapScanned: 0, framesEscalated: 0, ocrCalls: 0, vlmCalls: 0, visualCacheHits: 0, visualAnalysisMs: 0 }
+      }, visualRisk.config, { onStage });
+    }
     logToFile(`Policy judge metrics: ${JSON.stringify(data.metrics)}`);
     return { ok: true, data };
   } catch (error) {
@@ -476,6 +512,14 @@ app.whenReady().then(async () => {
     config: judgeConfig,
     provider: new LocalQwenProvider(judgeConfig),
     cache: new ModelFindingCache({ filePath: path.join(app.getPath('userData'), 'policy-judge-cache.json'), maxEntries: judgeConfig.cacheMaxEntries })
+  });
+  const visualConfig = loadVisualRiskConfig();
+  visualMedia = new VisualMediaService({ tempRoot: path.join(app.getPath('userData'), 'visual-temp'), downloadProxy: downloadVisualProxy });
+  visualMedia.cleanupStale();
+  visualRisk = new VisualRiskService({
+    config: visualConfig, textModel: judgeConfig.model,
+    sampler: new VisualSamplingService({ ffmpegPath: binaryPaths.ffmpegPath, runProcess, config: visualConfig }),
+    cache: new VisualFindingCache({ filePath: path.join(app.getPath('userData'), 'visual-findings-cache.json'), maxEntries: visualConfig.cacheMaxEntries })
   });
   if (fs.existsSync(legacyCookiesPath)) {
     logToFile('Legacy cookies.txt retained but disabled; dedicated YouTube session is primary.');

@@ -1,6 +1,13 @@
 const { normalizeText } = require('../policyKnowledge');
 
-const DECISION_SOURCES = Object.freeze(['PRECHECK', 'DETERMINISTIC_POLICY_ENGINE', 'MODEL_FAILURE_FALLBACK']);
+const DECISION_SOURCES = Object.freeze(['PRECHECK', 'DETERMINISTIC_POLICY_ENGINE', 'MULTIMODAL_POLICY_ENGINE', 'MODEL_FAILURE_FALLBACK']);
+
+const VISUAL_POLICY_IDS = Object.freeze({
+  weapon: 'TT25_CG_WEAPONS_001', blood: 'TT25_CG_GRAPHIC_002', graphic_injury: 'TT25_CG_GRAPHIC_001',
+  nudity: 'TT25_CG_NUDITY_001', sexual_content: 'TT25_CG_SEXUAL_001', violent_act: 'TT25_CG_VIOLENCE_001',
+  self_harm_visual: 'TT25_CG_SUICIDE_001', drug_or_regulated_goods: 'TT25_CG_REGULATED_001',
+  personal_information: 'TT25_CG_PRIVACY_001', shocking_content: 'TT25_CG_SHOCKING_001'
+});
 
 function exceptionSupported(policy, finding, overallContext) {
   if (!finding.exceptionApplies) return false;
@@ -84,4 +91,49 @@ function decideFromFindings(findingsOutput, candidatePolicies, config) {
   return result('KEEP', applicable.length ? 'NO_PROHIBITED_POLICY_APPLIES' : 'NO_POLICY_APPLIES', detail);
 }
 
-module.exports = { DECISION_SOURCES, decideFromFindings, exceptionSupported };
+function mergeVisualFindings(textJudgment, frames, repository, config, visualStatus = 'AVAILABLE') {
+  const visualFindings = frames.flatMap(frame => frame.findings.map(finding => ({
+    ...finding, timestamp: frame.timestamp, frameId: frame.frameId
+  })));
+  const evidence = {
+    text: [...(textJudgment.policyIds || [])],
+    visual: visualFindings.map(({ timestamp, frameId, category, confidence, severity }) => ({ timestamp, frameId, category, confidence, severity }))
+  };
+  if (visualStatus !== 'AVAILABLE') {
+    return {
+      ...textJudgment, visualStatus, visualFindings, evidence,
+      decision: textJudgment.requiresVisualReview ? 'REVIEW' : textJudgment.decision,
+      reason: textJudgment.requiresVisualReview ? 'Visual verification unavailable.' : textJudgment.reason
+    };
+  }
+  if (!visualFindings.length) {
+    if (textJudgment.mappingReason !== 'VISUAL_REVIEW_REQUIRED') return { ...textJudgment, visualStatus, visualFindings, evidence };
+    return {
+      ...textJudgment, decision: 'KEEP', decisionSource: 'MULTIMODAL_POLICY_ENGINE', mappingReason: 'VISUAL_SAMPLE_CLEAR',
+      reason: 'Sampled frames did not establish the transcript-indicated visual risk.', requiresVisualReview: false,
+      visualStatus, visualFindings, evidence
+    };
+  }
+
+  const records = visualFindings.map(finding => ({ finding, policy: repository.getPolicyById(VISUAL_POLICY_IDS[finding.category]) })).filter(item => item.policy);
+  const uncertain = visualFindings.some(item => item.requiresHumanReview || item.severity === 'uncertain' || item.confidence < config.visualPolicyConfidence);
+  const severe = records.filter(({ finding, policy }) =>
+    policy.outcome.postability === 'PROHIBIT'
+    && ['severe', 'extreme'].includes(finding.severity)
+    && finding.confidence >= config.visualPolicyConfidence
+    && !finding.requiresHumanReview
+  );
+  const controlledContext = ['news_reporting', 'documentary', 'educational', 'medical', 'prevention', 'recovery'].includes(textJudgment.contextType);
+  const decision = textJudgment.decision === 'REMOVE' || (severe.length && !controlledContext) ? 'REMOVE' : 'REVIEW';
+  const policyIds = [...new Set([...(textJudgment.policyIds || []), ...records.map(item => item.policy.id)])];
+  const categories = [...new Set([...(textJudgment.categories || []), ...records.map(item => item.policy.category)])];
+  return {
+    ...textJudgment, decision, decisionSource: 'MULTIMODAL_POLICY_ENGINE',
+    mappingReason: decision === 'REMOVE' ? 'VISUAL_POLICY_PROHIBITED' : uncertain ? 'VISUAL_EVIDENCE_UNCERTAIN' : 'VISUAL_POLICY_REVIEW',
+    reason: decision === 'REMOVE' ? 'High-confidence prohibited visual evidence.' : 'Visual evidence requires policy or human review.',
+    confidence: Math.min(textJudgment.confidence ?? 1, ...visualFindings.map(item => item.confidence)),
+    requiresVisualReview: decision === 'REVIEW', policyIds, categories, visualStatus, visualFindings, evidence
+  };
+}
+
+module.exports = { DECISION_SOURCES, VISUAL_POLICY_IDS, decideFromFindings, exceptionSupported, mergeVisualFindings };

@@ -1,7 +1,7 @@
 (function exposePolicyAnalysis(globalScope) {
     /** @typedef {'KEEP' | 'REVIEW' | 'REMOVE'} PolicyDecision */
     const POLICY_DECISIONS = Object.freeze(['KEEP', 'REVIEW', 'REMOVE']);
-    const ANALYSIS_STAGES = Object.freeze(['metadata', 'transcript', 'policy', 'safe_windows', 'complete']);
+    const ANALYSIS_STAGES = Object.freeze(['metadata', 'transcript', 'policy', 'visual_proxy', 'visual_sampling', 'safe_windows', 'complete']);
 
     function extractVideoId(url) {
         const host = url.hostname.toLowerCase().replace(/^www\./, '');
@@ -139,9 +139,11 @@
                 : await api.analyzeYouTubeVideo(url, requestId);
             if (!options.ingest && !response?.ok) throw Object.assign(new Error(response?.error?.message || 'Unable to analyze video.'), { code: response?.error?.code || 'INGESTION_ERROR' });
             const ingestion = options.ingest ? response : response.data;
-            if (!options.ingest && /^local-qwen-v\d+$/.test(ingestion?.analysisVersion || '')) return ingestion;
+            if (!options.ingest && /^local-qwen(?:-visual)?-v\d+$/.test(ingestion?.analysisVersion || '')) return ingestion;
             onStageChange('policy');
             const result = buildResult(ingestion);
+            onStageChange('visual_proxy');
+            onStageChange('visual_sampling');
             onStageChange('safe_windows');
             onStageChange('complete');
             return result;

@@ -42,6 +42,8 @@ function renderAnalyzing(stage) {
         ['metadata', 'Video metadata'],
         ['transcript', 'Transcript'],
         ['policy', 'Checking TikTok policies'],
+        ['visual_proxy', 'Preparing local visual proxy'],
+        ['visual_sampling', 'Scanning sampled frames'],
         ['safe_windows', 'Finding safe segments']
     ];
     const activeIndex = stage === 'complete' ? stages.length : Math.max(0, stages.findIndex(([key]) => key === stage));
@@ -59,6 +61,7 @@ function renderAnalyzing(stage) {
 }
 
 function segmentRow(segment) {
+    const visualRisk = segment.visualFindings?.length > 0;
     return `
         <article class="segment-row">
             <div class="segment-marker ${segment.decision.toLowerCase()}">${segment.decision === 'REMOVE' ? '×' : segment.decision === 'REVIEW' ? '!' : '✓'}</div>
@@ -66,6 +69,7 @@ function segmentRow(segment) {
                 <strong>${escapeHtml(segment.startLabel)} → ${escapeHtml(segment.endLabel)}</strong>
                 <span>Duration: ${formatDuration(segment.endSeconds - segment.startSeconds)}</span>
                 ${segment.reason ? `<small>${escapeHtml(segment.reason)}</small>` : ''}
+                ${visualRisk ? '<small>REVIEW â€” Visual Risk</small>' : segment.decision === 'REVIEW' ? '<small>REVIEW â€” Text/Policy Context</small>' : ''}
                 ${segment.policyIds?.length ? `<small>Policy: ${escapeHtml(segment.policyIds.join(', '))}</small>` : ''}
             </div>
             ${decisionBadge(segment.decision)}

@@ -91,11 +91,12 @@ test('renderer supports all states, Enter, and empty safe-window output', () => 
   assert.match(renderer, /requestGuard\.isCurrent/);
 });
 
-test('main process reuses auth and fetches no video for ingestion', () => {
+test('main process reuses auth and keeps transcript ingestion media-free before the visual pass', () => {
   const main = source('main.js');
   const preload = source('preload.js');
   assert.match(main, /youtubeAuth\.withTemporaryCookies/);
   assert.match(main, /'--no-playlist', '--skip-download', '--dump-single-json'/);
+  assert.match(main, /downloadVisualProxy[\s\S]*bestvideo\[height<=360\]/);
   assert.match(main, /ipcMain\.handle\('analyze-youtube-video'/);
   assert.match(main, /activeAnalysisControllers\.get\(senderId\)\?\.abort\(\)/);
   assert.match(preload, /analyzeYouTubeVideo/);

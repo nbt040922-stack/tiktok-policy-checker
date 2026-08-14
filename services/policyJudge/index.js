@@ -4,7 +4,7 @@ const path = require('node:path');
 const defaults = require('../../config/policy-judge.json').policyJudge;
 const { findSafeWindows, formatTimestamp } = require('../policyAnalysis');
 const { loadPolicySet } = require('../policyKnowledge');
-const { decideFromFindings } = require('./decisionEngine');
+const { decideFromFindings, mergeVisualFindings } = require('./decisionEngine');
 const { screenTranscript } = require('./riskScreen');
 const { LocalQwenProvider, POLICY_JUDGE_PROMPT_VERSION, PolicyJudgeError } = require('./provider');
 
@@ -189,7 +189,7 @@ class PolicyJudgeService {
     return this.provider.healthCheck(options);
   }
 
-  async analyzeIngestion(ingestion, { onStage = () => {}, signal, skipHealthCheck = false } = {}) {
+  async analyzeIngestion(ingestion, { onStage = () => {}, signal, skipHealthCheck = false, deferCompletion = false } = {}) {
     const startedAt = Date.now();
     if (!skipHealthCheck) {
       const health = await this.healthCheck({ signal });
@@ -265,7 +265,7 @@ class PolicyJudgeService {
       };
     });
 
-    onStage('safe_windows');
+    if (!deferCompletion) onStage('safe_windows');
     const segments = mergeAdjacentDecisions(judgments, { maxGapSeconds: this.config.mergeGapSeconds });
     const removeCount = judgments.filter(item => item.decision === 'REMOVE').length;
     const reviewCount = judgments.filter(item => item.decision === 'REVIEW').length;
@@ -273,7 +273,7 @@ class PolicyJudgeService {
     metrics.p50LatencyMs = percentile(latencies, 0.5);
     metrics.p95LatencyMs = percentile(latencies, 0.95);
     metrics.totalAnalysisMs = Date.now() - startedAt;
-    onStage('complete');
+    if (!deferCompletion) onStage('complete');
     return {
       analysisVersion: 'local-qwen-v2', videoId: ingestion.metadata.videoId, url: ingestion.metadata.url,
       title: ingestion.metadata.title, durationSeconds: ingestion.metadata.durationSeconds,
@@ -283,6 +283,24 @@ class PolicyJudgeService {
       transcriptSource: ingestion.transcriptSource, channelName: ingestion.metadata.channelName,
       thumbnailUrl: ingestion.metadata.thumbnailUrl, policyVersion: this.repository.version,
       judge: { ...modelInfo, promptVersion: POLICY_JUDGE_PROMPT_VERSION }, analyzedAt: new Date().toISOString(), metrics
+    };
+  }
+
+  applyVisualAnalysis(textResult, visualResult, visualConfig, { onStage = () => {} } = {}) {
+    const judgments = textResult.segmentJudgments.map((judgment, index) =>
+      mergeVisualFindings(judgment, visualResult.framesBySegment[index] || [], this.repository, visualConfig, visualResult.visualStatus)
+    );
+    onStage('safe_windows');
+    const segments = mergeAdjacentDecisions(judgments, { maxGapSeconds: this.config.mergeGapSeconds });
+    const overallDecision = judgments.some(item => item.decision === 'REMOVE') ? 'REMOVE'
+      : judgments.some(item => item.decision === 'REVIEW') ? 'REVIEW' : 'KEEP';
+    onStage('complete');
+    return {
+      ...textResult, analysisVersion: 'local-qwen-visual-v3', overallDecision, segments,
+      segmentJudgments: judgments, recommendedClips: findSafeWindows(judgments),
+      visualStatus: visualResult.visualStatus, visualError: visualResult.visualError,
+      visual: { model: visualConfig.model, detectorVersion: visualConfig.detectorVersion, thresholdVersion: visualConfig.thresholdVersion },
+      metrics: { ...textResult.metrics, visual: visualResult.metrics }
     };
   }
 }
