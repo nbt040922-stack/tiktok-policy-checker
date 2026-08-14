@@ -1,0 +1,58 @@
+{
+  "name": "tiktok-policy-checker",
+  "version": "1.0.0",
+  "description": "Desktop workflow for checking YouTube transcripts against TikTok policies",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "test:fresh-install": "powershell -ExecutionPolicy Bypass -File scripts/test-fresh-install.ps1",
+    "preflight": "node scripts/preflight.js",
+    "build": "electron-builder",
+    "dist": "electron-builder"
+  },
+  "keywords": [],
+  "author": "Antigravity",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.tiktokpolicychecker.app",
+    "productName": "TikTok Policy Checker",
+    "directories": {
+      "output": "dist"
+    },
+    "beforePack": "./scripts/preflight.js",
+    "files": [
+      "**/*",
+      "!resources/bin{,/**/*}",
+      "!test{,/**/*}",
+      "!scripts{,/**/*}",
+      "!PHASE*.md",
+      "!dist{,/**/*}",
+      "!dist-*{,/**/*}",
+      "!release-*{,/**/*}"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin/fallback/",
+        "to": "bin/fallback/",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "resources/mascot.png",
+        "to": "mascot.png"
+      }
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    }
+  }
+}

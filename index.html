@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Policy Checker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="menu-items" aria-label="Application menu">
+            <div class="menu-item">File</div>
+            <div class="menu-item">History</div>
+            <div class="menu-item active">Policy</div>
+            <div class="menu-item">Settings</div>
+        </div>
+
+        <div class="window-controls">
+            <button id="winMinimize" class="control-icon" aria-label="Minimize"><i class="far fa-window-minimize"></i></button>
+            <button id="winMaximize" class="control-icon" aria-label="Maximize"><i class="far fa-window-maximize"></i></button>
+            <button id="winClose" class="control-icon close" aria-label="Close"><i class="fas fa-times"></i></button>
+        </div>
+    </header>
+
+    <main>
+        <div class="search-section">
+            <div class="search-bar">
+                <input id="urlInput" class="search-input" type="url" autocomplete="off"
+                    placeholder="Paste YouTube link to check TikTok policy..."
+                    aria-label="YouTube video URL">
+                <button id="analyzeBtn" class="download-btn" type="button" title="Analyze" aria-label="Analyze video">
+                    <i id="analyzeIcon" class="fas fa-shield-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <section id="policyResult" class="policy-result" aria-live="polite"></section>
+    </main>
+
+    <footer>
+        <div id="engineLabel" class="footer-center">Queue: 0 | Analyzing: 0 | Checked: 0</div>
+    </footer>
+
+    <script src="services/policyAnalysis/index.js"></script>
+    <script src="renderer.js"></script>
+</body>
+</html>
