@@ -36,6 +36,8 @@ At startup, stale `RUNNING` records become `QUEUED` with `APP_INTERRUPTED`. `QUE
 
 Network, YouTube rate/server, temporary Ollama, timeout, and OCR worker failures retry up to three total attempts with bounded exponential backoff. Invalid/private/removed videos, missing transcript, missing model, corrupt policy files, and unsupported URLs fail immediately with separate `errorCode`, `technicalMessage`, and Vietnamese `userMessage`.
 
+Phase 6.1 production validation tightened two recovery boundaries without changing the architecture: subtitle HTTP 408/429 responses are classified as retryable network failures, and a job's `RUNNING` state is persisted before its `started` event is emitted. The latter closes the force-close window where recovery was safe but could miss the `APP_INTERRUPTED` marker.
+
 Pause finishes the active phase safely and prevents another phase from starting. Resume restores paused records. Cancel propagates through the existing abort signal to subtitle fetch, yt-dlp, FFmpeg, Qwen, OCR, and Gemma. Cancel-all does not delete completed reports. Retry uses the same record and durable checkpoint. Re-analysis creates a new revision and preserves the prior JSON/HTML files.
 
 ## Reports and history
@@ -53,4 +55,3 @@ Report retention defaults to indefinitely (`keepReportsDays = 0`) and can be set
 ## UI scope
 
 The compact screen is preserved. The URL control accepts one or many pasted URLs. A small queue panel shows counts, status, stage, coarse progress, final aggregate, actions, search/filter, exports, and collapsed storage maintenance. Only the most relevant 100 records enter the DOM.
-

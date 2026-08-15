@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-15T13:00:00.000Z",
+  "status": "BLOCKED_EXTERNAL_SOURCE",
+  "operationalVerdict": "NOT_READY",
+  "sourceMediaCommitted": false,
+  "build": {
+    "version": "1.0.0",
+    "platform": "windows-x64-portable",
+    "baseCommit": "61d84fa634307321992d796bbeee6babf23dda51",
+    "artifact": "dist/TikTok Policy Checker 1.0.0.exe",
+    "sizeBytes": 255821214,
+    "sha256": "F1D6FDE892003F3743E639960D6BA4FC76A522E96C6AD121623BB0AC11A30D50",
+    "freshDirectoryOutsideRepository": true
+  },
+  "workload": {
+    "manifest": "test/daily-use/manifest.json",
+    "realVideoCount": 20,
+    "submittedUrlStrings": 22,
+    "canonicalJobs": 20,
+    "duplicatesRejected": 2,
+    "completed": 0,
+    "failed": 18,
+    "cancelled": 2,
+    "lost": 0,
+    "retriedJobs": 4,
+    "failureClassification": { "YOUTUBE": 18 },
+    "externalLimitation": "YouTube timed-text endpoint returned HTTP 429 for every selected caption request from the evaluation IP."
+  },
+  "cold": {
+    "wallToTerminalMsIncludingInvestigationPause": 217860,
+    "investigationPauseMsApprox": 139000,
+    "measuredActiveMetadataMs": 70319,
+    "measuredActiveSubtitleFetchMs": 8548,
+    "firstCompletedJobMs": null,
+    "videosPerHour": null,
+    "qwenFirstLoadMs": null,
+    "gemmaFirstLoadMs": null,
+    "ocrFirstStartMs": null
+  },
+  "warm": {
+    "run": false,
+    "reason": "No cold job completed; warm throughput would not be comparable or useful.",
+    "videosPerHour": null
+  },
+  "capacityMachineHours": { "50": null, "100": null, "200": null },
+  "queue": {
+    "pauseResume": "PASS",
+    "queuedCancellation": "PASS",
+    "runningCancellation": "PASS",
+    "boundedRetry": "PASS",
+    "crashRestart": "PASS",
+    "historyAfterRestart": "PASS",
+    "databaseBytes": 27209,
+    "finalStatusCounts": { "FAILED": 18, "CANCELLED": 2 }
+  },
+  "exports": {
+    "csv": "PASS",
+    "csvRows": 20,
+    "csvUniqueVideoIds": 20,
+    "json": "PASS",
+    "jsonJobs": 20
+  },
+  "resources": {
+    "vramMiB": { "baseline": 1124, "metadataOnlyPeakObserved": 1454, "postRun": 1252 },
+    "modelLoadedMeasurementsReached": false,
+    "ollamaResidentModelsAtFinalSnapshot": 0,
+    "appProcessTreeRamMiB": { "startupWorkSnapshotApprox": 535, "idleFinalSnapshotApprox": 374 },
+    "visualTempBytesAfterRun": 0,
+    "orphanAppOwnedChildren": 0
+  },
+  "ocr": {
+    "freshInstallHealth": "PASS",
+    "systemPythonRequired": false,
+    "visualOcrPythonRequired": false,
+    "endToEndRealWorkloadReached": false
+  },
+  "privacy": {
+    "actualLogSensitiveKeyMatches": 0,
+    "rotationHarness": "PASS",
+    "packagedLogReachedRotationThreshold": false
+  },
+  "verification": {
+    "regressionTests": { "passed": 166, "failed": 0 },
+    "crashRecoveryRepeated": { "passed": 10, "failed": 0 },
+    "doctor": "PASS",
+    "freshInstallRestrictedPath": "PASS",
+    "build": "PASS",
+    "ui200JobHarness": "PASS"
+  },
+  "fixes": [
+    "Classify subtitle HTTP 408/429 as retryable NETWORK_ERROR.",
+    "Persist RUNNING state before emitting the started event."
+  ],
+  "unvalidated": [
+    "20 real completed jobs",
+    "cold and warm successful throughput",
+    "Qwen/Gemma scheduling and VRAM creep",
+    "end-to-end packaged OCR",
+    "HTML and JSON report parity",
+    "completed history, revisions, stale analysis, and deterministic repeat"
+  ]
+}

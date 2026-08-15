@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "purpose": "Phase 6.1 packaged-application daily-use validation; categories describe production composition, not policy verdicts.",
+  "sources": [
+    { "id": "wxEpPin8MWw", "url": "https://www.youtube.com/watch?v=wxEpPin8MWw", "category": "b-roll-heavy", "expectedDurationBand": "<5m" },
+    { "id": "ooiOo4WjutY", "url": "https://www.youtube.com/watch?v=ooiOo4WjutY", "category": "anchor-heavy", "expectedDurationBand": "<5m" },
+    { "id": "ugE7G0jIOdg", "url": "https://www.youtube.com/watch?v=ugE7G0jIOdg", "category": "b-roll-heavy", "expectedDurationBand": "<5m" },
+    { "id": "g_DDsSswFjs", "url": "https://www.youtube.com/watch?v=g_DDsSswFjs", "category": "b-roll-heavy", "expectedDurationBand": "<5m" },
+    { "id": "h-JBhQqqWHY", "url": "https://www.youtube.com/watch?v=h-JBhQqqWHY", "category": "interview", "expectedDurationBand": "10-20m" },
+    { "id": "PLMSoD1riE0", "url": "https://www.youtube.com/watch?v=PLMSoD1riE0", "category": "interview", "expectedDurationBand": "5-10m" },
+    { "id": "CATix0Wzs6Q", "url": "https://www.youtube.com/watch?v=CATix0Wzs6Q", "category": "financial-economic", "expectedDurationBand": "5-10m" },
+    { "id": "FUt7neYI2p8", "url": "https://www.youtube.com/watch?v=FUt7neYI2p8", "category": "document-screenshot", "expectedDurationBand": "<5m" },
+    { "id": "uZ1qH0aYoJI", "url": "https://www.youtube.com/watch?v=uZ1qH0aYoJI", "category": "financial-economic", "expectedDurationBand": "<5m" },
+    { "id": "LK5j3pp0Too", "url": "https://www.youtube.com/watch?v=LK5j3pp0Too", "category": "interview", "expectedDurationBand": "10-20m" },
+    { "id": "hIvHyNnUGvw", "url": "https://www.youtube.com/watch?v=hIvHyNnUGvw", "category": "political-news", "expectedDurationBand": "10-20m" },
+    { "id": "hg7UWwGY9W8", "url": "https://www.youtube.com/watch?v=hg7UWwGY9W8", "category": "b-roll-heavy", "expectedDurationBand": "10-20m" },
+    { "id": "J1PtjoDZ6JU", "url": "https://www.youtube.com/watch?v=J1PtjoDZ6JU", "category": "political-news", "expectedDurationBand": ">20m" },
+    { "id": "GzLEz3jiO30", "url": "https://www.youtube.com/watch?v=GzLEz3jiO30", "category": "b-roll-heavy", "expectedDurationBand": "<5m" },
+    { "id": "deNi4y7mxXg", "url": "https://www.youtube.com/watch?v=deNi4y7mxXg", "category": "document-screenshot", "expectedDurationBand": "<5m" },
+    { "id": "fk-ZvMfL0a8", "url": "https://www.youtube.com/watch?v=fk-ZvMfL0a8", "category": "financial-economic", "expectedDurationBand": "<5m" },
+    { "id": "5ujC9Rrfp_c", "url": "https://www.youtube.com/watch?v=5ujC9Rrfp_c", "category": "political-news", "expectedDurationBand": "<5m" },
+    { "id": "bVL6bEOdmyo", "url": "https://www.youtube.com/watch?v=bVL6bEOdmyo", "category": "financial-economic", "expectedDurationBand": "<5m" },
+    { "id": "plT6scBv6Cc", "url": "https://www.youtube.com/watch?v=plT6scBv6Cc", "category": "interview", "expectedDurationBand": "5-10m" },
+    { "id": "8CJZmlpQsNU", "url": "https://www.youtube.com/watch?v=8CJZmlpQsNU", "category": "financial-economic", "expectedDurationBand": "<5m" }
+  ]
+}

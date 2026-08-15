@@ -281,7 +281,7 @@ class AnalysisQueue extends EventEmitter {
     void this._run(job, controller).finally(() => { this.active = null; this._drain(); });
   }
   async _run(job, controller) {
-    job.status = JOB_STATUS.RUNNING; job.startedAt ||= nowIso(this.now); job.attempts ||= 1; this._event(job, 'started'); this._changed();
+    job.status = JOB_STATUS.RUNNING; job.startedAt ||= nowIso(this.now); job.attempts ||= 1; this._changed(); this._event(job, 'started');
     const started = new Date(job.startedAt).getTime();
     try {
       const result = await this.executor(job, { signal: controller.signal, onStage: (stage, patch) => this._stage(job, stage, patch) });

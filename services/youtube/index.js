@@ -81,7 +81,7 @@ async function fetchSubtitle(track, fetchImpl, signal) {
   }
   if (!response.ok) {
     if ([401, 403].includes(response.status)) throw new YouTubeIngestionError('AUTH_REQUIRED');
-    throw new YouTubeIngestionError(response.status >= 500 ? 'NETWORK_ERROR' : 'TRANSCRIPT_UNAVAILABLE');
+    throw new YouTubeIngestionError([408, 429].includes(response.status) || response.status >= 500 ? 'NETWORK_ERROR' : 'TRANSCRIPT_UNAVAILABLE');
   }
   const body = await response.text();
   try {
