@@ -15,6 +15,8 @@
     "doctor": "node scripts/doctor.js",
     "test:fresh-install": "powershell -ExecutionPolicy Bypass -File scripts/test-fresh-install.ps1",
     "test:crash-recovery": "node scripts/test-analysis-crash-recovery.js",
+    "poc:extension:prepare": "node scripts/extension-poc/prepare-extension.js",
+    "poc:extension": "electron scripts/extension-poc/main.js",
     "preflight": "node scripts/preflight.js",
     "build": "electron-builder",
     "dist": "electron-builder"
