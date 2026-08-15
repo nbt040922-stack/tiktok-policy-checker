@@ -135,6 +135,29 @@ main { flex: 1; display: flex; flex-direction: column; padding: 16px 24px; gap: 
 .download-btn:disabled { cursor: wait; opacity: 0.65; }
 #analyzeIcon { transform: translateY(-1px); }
 
+/* Persistent analysis queue */
+.queue-panel { width: 100%; max-width: 900px; margin: 0 auto; padding: 12px 14px; flex: 0 0 auto; }
+.queue-toolbar, .queue-filters, .queue-actions, .analysis-job { display: flex; align-items: center; gap: 8px; }
+.queue-toolbar { justify-content: space-between; font-size: 12px; }
+.queue-actions button, .job-actions button, .queue-filters input, .queue-filters select { border: 1px solid var(--glass-border); background: rgba(255,255,255,.3); border-radius: 999px; padding: 6px 10px; color: var(--text-primary); font: inherit; }
+.queue-actions button, .job-actions button { cursor: pointer; }
+.queue-filters { margin-top: 9px; }
+.queue-filters input { flex: 1; min-width: 0; outline: 0; }
+.analysis-job-list { max-height: 270px; margin-top: 8px; overflow-y: auto; }
+.analysis-job { min-height: 46px; padding: 7px 4px; border-top: 1px solid rgba(40,50,60,.07); }
+.job-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.job-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.job-copy small { color: var(--text-secondary); font-size: 10px; }
+.job-progress { width: 90px; height: 3px; background: rgba(60,70,80,.09); border-radius: 999px; overflow: hidden; }
+.job-progress span { display: block; height: 100%; background: #4d535a; }
+.job-result { min-width: 78px; text-align: center; font-size: 9px; font-weight: 700; }
+.job-actions button { padding: 5px 8px; font-size: 10px; }
+.queue-empty { padding: 10px 2px; color: var(--text-muted); font-size: 11px; }
+.queue-maintenance { margin-top: 8px; color: var(--text-secondary); font-size: 10px; }
+.queue-maintenance summary { cursor: pointer; }
+.queue-maintenance div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 7px; }
+.queue-maintenance button, .queue-maintenance select { border: 1px solid var(--glass-border); border-radius: 999px; padding: 4px 7px; background: rgba(255,255,255,.3); color: inherit; font: inherit; }
+
 /* Policy Analysis */
 .policy-result { width: 100%; max-width: 900px; margin: 0 auto; flex: 1; }
 .policy-empty, .policy-analyzing, .policy-error { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--text-secondary); }

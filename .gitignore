@@ -3,6 +3,7 @@ node_modules/
 __pycache__/
 dist/
 resources/bin/
+resources/ocr/
 *.log
 .DS_Store
 Thumbs.db

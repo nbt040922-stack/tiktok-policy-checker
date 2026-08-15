@@ -21,6 +21,9 @@ except Exception as error:  # pragma: no cover - exercised through provider heal
     emit({"type": "fatal", "error": str(error)})
     raise SystemExit(1)
 
+if "--health" in sys.argv:
+    raise SystemExit(0)
+
 for raw_line in sys.stdin:
     try:
         request = json.loads(raw_line)

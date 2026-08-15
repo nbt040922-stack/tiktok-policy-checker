@@ -115,7 +115,7 @@ test('Gemma skip logic reuses anchors and escalates transitions, risky OCR, and 
 });
 
 test('missing RapidOCR environment reports unavailable without touching Electron dependencies', async () => {
-  const provider = new RapidOcrProvider({ pythonPath: path.join(os.tmpdir(), 'missing-python.exe') });
+  const provider = new RapidOcrProvider({ pythonPath: path.join(os.tmpdir(), 'missing-python.exe'), usePackaged: false });
   assert.deepEqual(await provider.healthCheck(), { ok: false, code: 'OCR_UNAVAILABLE', message: 'RapidOCR worker environment is unavailable.' });
 });
 

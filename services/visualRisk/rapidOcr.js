@@ -4,14 +4,18 @@ const { spawn } = require('node:child_process');
 const readline = require('node:readline');
 
 class RapidOcrProvider {
-  constructor({ pythonPath = process.env.VISUAL_OCR_PYTHON || path.join(__dirname, '..', '..', '.venv-visual', 'Scripts', 'python.exe'), workerPath = path.join(__dirname, 'ocr-worker.py'), spawnImpl = spawn } = {}) {
+  constructor({ pythonPath = process.env.VISUAL_OCR_PYTHON || path.join(__dirname, '..', '..', '.venv-visual', 'Scripts', 'python.exe'), workerPath = path.join(__dirname, 'ocr-worker.py'), executablePath, usePackaged = true, spawnImpl = spawn } = {}) {
+    const packaged = process.resourcesPath && path.join(process.resourcesPath, 'ocr', 'rapidocr-worker.exe');
+    const development = path.join(__dirname, '..', '..', 'resources', 'ocr', 'rapidocr-worker.exe');
+    this.executablePath = executablePath || process.env.VISUAL_OCR_EXECUTABLE || (usePackaged ? [packaged, development].filter(Boolean).find(candidate => fs.existsSync(candidate)) : null) || null;
     this.pythonPath = pythonPath; this.workerPath = workerPath; this.spawn = spawnImpl;
     this.child = null; this.pending = new Map(); this.nextId = 1; this.ready = null;
   }
 
   healthCheck() {
-    return Promise.resolve(fs.existsSync(this.pythonPath) && fs.existsSync(this.workerPath)
-      ? { ok: true, engine: 'RapidOCR', device: 'cpu' }
+    const available = this.executablePath ? fs.existsSync(this.executablePath) : fs.existsSync(this.pythonPath) && fs.existsSync(this.workerPath);
+    return Promise.resolve(available
+      ? { ok: true, engine: 'RapidOCR', device: 'cpu', runtime: this.executablePath ? 'frozen-worker' : 'python-worker' }
       : { ok: false, code: 'OCR_UNAVAILABLE', message: 'RapidOCR worker environment is unavailable.' });
   }
 
@@ -19,7 +23,7 @@ class RapidOcrProvider {
     if (this.child) return this.ready;
     const health = await this.healthCheck();
     if (!health.ok) throw Object.assign(new Error(health.message), { code: health.code });
-    this.child = this.spawn(this.pythonPath, ['-u', this.workerPath], {
+    this.child = this.spawn(this.executablePath || this.pythonPath, this.executablePath ? [] : ['-u', this.workerPath], {
       windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'], env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
     });
     this.ready = new Promise((resolve, reject) => {

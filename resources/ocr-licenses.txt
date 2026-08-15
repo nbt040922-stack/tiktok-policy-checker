@@ -1,0 +1,7 @@
+RapidOCR 3.9.2 - Apache License 2.0
+https://github.com/RapidAI/RapidOCR
+
+ONNX Runtime 1.28.0 - MIT License
+https://github.com/microsoft/onnxruntime
+
+This application bundles the unmodified runtime components for local CPU OCR.

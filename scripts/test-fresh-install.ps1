@@ -7,7 +7,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-if (-not $AppPath) { $AppPath = Join-Path $projectRoot 'dist\win-unpacked\YTDOWNLOAD.exe' }
+if (-not $AppPath) { $AppPath = Join-Path $projectRoot 'dist\win-unpacked\TikTok Policy Checker.exe' }
 $AppPath = (Resolve-Path -LiteralPath $AppPath).Path
 $testRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('ytdownload-fresh-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $testRoot | Out-Null
@@ -37,6 +37,18 @@ try {
   foreach ($binary in @($ytDlp, $deno, $ffmpeg)) {
     if (-not (Test-Path -LiteralPath $binary)) { throw "Missing runtime binary: $binary" }
   }
+  $appRoot = Split-Path -Parent $AppPath
+  $ocr = Join-Path $appRoot 'resources\ocr\rapidocr-worker.exe'
+  $asar = Join-Path $appRoot 'resources\app.asar'
+  if (-not (Test-Path -LiteralPath $ocr)) { throw 'Missing packaged OCR worker.' }
+  if (-not (Test-Path -LiteralPath $asar)) { throw 'Missing Electron app resources (policies/config).' }
+  $ocrHealth = & $ocr '--health' | Select-Object -Last 1
+  if ($LASTEXITCODE -ne 0 -or -not ($ocrHealth | Select-String '"type": "ready"')) { throw 'Packaged OCR worker health check failed.' }
+  $jobDatabase = Join-Path $testRoot 'analysis-jobs.json'
+  if (-not (Test-Path -LiteralPath $jobDatabase)) { throw 'Persistent analysis job database was not created.' }
+
+  $ollamaModels = @()
+  try { $ollamaModels = (Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/tags' -TimeoutSec 3).models.name } catch {}
 
   $downloadPath = $null
   $duration = $null
@@ -71,6 +83,10 @@ try {
     UserData = $testRoot
     Bootstrap = $state.ok
     RuntimeSource = $state.engines.ytdlp.recovery_source
+    OCR = 'PASS'
+    PolicyAndConfigResources = 'PASS'
+    Qwen = if ($ollamaModels -contains 'qwen3:14b') { 'PASS' } else { 'WARN - qwen3:14b not installed' }
+    Gemma = if ($ollamaModels -contains 'gemma4:12b') { 'PASS' } else { 'WARN - gemma4:12b not installed' }
     NetworkTest = -not $SkipNetwork
     Download = $downloadPath
     Duration = $duration

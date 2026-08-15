@@ -141,7 +141,10 @@ class VisualFindingCache {
       try {
         const parsed = JSON.parse(fileSystem.readFileSync(filePath, 'utf8'));
         if (parsed.version === 1) Object.entries(parsed.entries || {}).forEach(([key, value]) => this.entries.set(key, value));
-      } catch (_) { this.entries.clear(); }
+      } catch (_) {
+        this.entries.clear();
+        try { fileSystem.renameSync(filePath, `${filePath}.corrupt-${Date.now()}`); } catch (_) {}
+      }
     }
   }
   get(key) { return this.entries.get(key) || null; }
@@ -208,13 +211,13 @@ class VisualRiskService {
     this.ocrProvider = ocrProvider || new RapidOcrProvider();
     this.cache = cache || new VisualFindingCache({ maxEntries: config.cacheMaxEntries }); this.textModel = textModel;
   }
-  async analyze(proxyPath, workDir, ingestion, textJudgments, { onStage = () => {}, signal } = {}) {
+  async analyze(proxyPath, workDir, ingestion, textJudgments, { onStage = () => {}, signal, unloadAfter = true } = {}) {
     const started = Date.now();
     const sceneTypeCounts = Object.fromEntries(Object.values(NEWS_SCENE_TYPES).map(type => [type, 0]));
     const metrics = {
       framesSampled: 0, framesDeduplicated: 0, framesCheapScanned: 0, framesEscalated: 0,
-      ocrCalls: 0, ocrFrames: 0, ocrUsefulFrames: 0, ocrDuplicateSkips: 0,
-      vlmCalls: 0, gemmaCalls: 0, gemmaCallsSkippedByAnchorReuse: 0,
+      ocrCalls: 0, ocrMs: 0, ocrFrames: 0, ocrUsefulFrames: 0, ocrDuplicateSkips: 0,
+      vlmCalls: 0, gemmaMs: 0, gemmaCalls: 0, gemmaCallsSkippedByAnchorReuse: 0,
       visualCacheHits: 0, visualAnalysisMs: 0, newsVisualMs: 0, sceneTypeCounts,
       anchorSegments: 0, brollSegments: 0, documentSegments: 0, textHeavySegments: 0
     };
@@ -301,6 +304,7 @@ class VisualRiskService {
               try {
                 metrics.ocrCalls++; metrics.ocrFrames++;
                 const rawOcr = await this.ocrProvider.inspectFrame(await ensureJpeg(), timestamp, { signal });
+                metrics.ocrMs += Number(rawOcr.engineMs || 0);
                 ocr = normalizeOcrOutput(rawOcr, timestamp, seenOcr, this.config.ocrMinimumConfidence);
                 if (ocr.normalizedText) metrics.ocrUsefulFrames++;
                 if (ocr.duplicate) metrics.ocrDuplicateSkips++;
@@ -352,7 +356,9 @@ class VisualRiskService {
             if (modelAvailable) {
               try {
                 metrics.vlmCalls++; metrics.gemmaCalls++;
+                const gemmaStarted = Date.now();
                 const inspected = await this.provider.inspectFrame(await ensureJpeg(), cheapSignals, { signal });
+                metrics.gemmaMs += Date.now() - gemmaStarted;
                 findings = inspected.findings.filter(item => item.applies && item.category !== 'on_screen_text_risk');
                 detectedText ||= normalizeOcr(inspected.detectedText, seenText);
                 semanticReviewed = true;
@@ -390,7 +396,7 @@ class VisualRiskService {
         output.push(frameResults);
       }
     } finally {
-      await this.provider.unload(this.config.model).catch(() => {});
+      if (unloadAfter) await this.provider.unload(this.config.model).catch(() => {});
       this.ocrProvider.close?.();
     }
     metrics.visualAnalysisMs = Date.now() - started;

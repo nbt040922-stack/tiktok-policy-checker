@@ -5,6 +5,7 @@ const { spawnSync } = require('child_process');
 const REQUIRED_APP_FILES = [
   'package.json', 'main.js', 'preload.js', 'renderer.js', 'index.html', 'style.css',
   'engine-runtime.js', 'runtime-binaries.js', 'download-manager.js', 'auth-session.js',
+  'analysis-jobs.js', 'structured-log.js',
   path.join('resources', 'mascot.png')
 ];
 const ENGINES = [
@@ -52,6 +53,16 @@ function runPreflight({ projectDir = path.resolve(__dirname, '..'), run = spawnS
   if (!resources.some(resource => resource.from === 'resources/bin/fallback/' && resource.to === 'bin/fallback/')) {
     failures.push('package config does not include immutable fallback binaries');
   }
+  if (!resources.some(resource => resource.from === 'resources/ocr/' && resource.to === 'ocr/')) failures.push('package config does not include frozen OCR worker');
+  const ocrExecutable = path.join(projectDir, 'resources', 'ocr', 'rapidocr-worker.exe');
+  const ocrLicenses = path.join(projectDir, 'resources', 'ocr', 'THIRD_PARTY_LICENSES.txt');
+  if (!fs.existsSync(ocrExecutable)) failures.push('missing frozen OCR worker: run npm run package:ocr');
+  else {
+    const result = run(ocrExecutable, ['--health'], { encoding: 'utf8', windowsHide: true, timeout: 30000, env: { ...process.env, PATH: '' } });
+    if (result.error || result.status !== 0 || !/"type":\s*"ready"/.test(result.stdout || '')) failures.push('frozen OCR worker cannot run');
+    else versions['rapidocr-worker.exe'] = 'RapidOCR 3.9.2 / ONNX Runtime 1.28.0';
+  }
+  if (!fs.existsSync(ocrLicenses)) failures.push('missing frozen OCR third-party license notice: run npm run package:ocr');
   const files = metadata?.build?.files || [];
   if (!files.includes('!resources/bin{,/**/*}')) {
     failures.push('package config does not exclude source binaries from app.asar');
@@ -62,7 +73,7 @@ function runPreflight({ projectDir = path.resolve(__dirname, '..'), run = spawnS
 
 async function beforePack(context) {
   const result = runPreflight({ projectDir: context.packager.projectDir });
-  console.log(`[preflight] fallback engines verified: ${Object.keys(result.versions).join(', ')}`);
+    console.log(`[preflight] packaged runtimes verified: ${Object.keys(result.versions).join(', ')}`);
 }
 
 module.exports = { default: beforePack, runPreflight };

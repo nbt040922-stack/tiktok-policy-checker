@@ -41,7 +41,10 @@ class ModelFindingCache {
       const parsed = JSON.parse(this.fs.readFileSync(this.filePath, 'utf8'));
       if (parsed.version !== 2) return;
       for (const [key, value] of Object.entries(parsed.entries || {})) this.entries.set(key, value);
-    } catch (_) { this.entries.clear(); }
+    } catch (_) {
+      this.entries.clear();
+      try { this.fs.renameSync(this.filePath, `${this.filePath}.corrupt-${Date.now()}`); } catch (_) {}
+    }
   }
 
   get(key) { return this.entries.get(key) || null; }

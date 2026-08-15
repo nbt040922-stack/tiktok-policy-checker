@@ -10,7 +10,11 @@
     "benchmark:visual": "node scripts/run-visual-risk-benchmark.js",
     "benchmark:visual:real": "node scripts/run-real-world-visual-stress.js",
     "benchmark:visual:news": "node scripts/run-news-visual-benchmark.js",
+    "benchmark:batch": "node scripts/run-phase6-batch-benchmark.js",
+    "package:ocr": "powershell -ExecutionPolicy Bypass -File scripts/package-ocr.ps1",
+    "doctor": "node scripts/doctor.js",
     "test:fresh-install": "powershell -ExecutionPolicy Bypass -File scripts/test-fresh-install.ps1",
+    "test:crash-recovery": "node scripts/test-analysis-crash-recovery.js",
     "preflight": "node scripts/preflight.js",
     "build": "electron-builder",
     "dist": "electron-builder"
@@ -32,6 +36,7 @@
     "files": [
       "**/*",
       "!resources/bin{,/**/*}",
+      "!resources/ocr{,/**/*}",
       "!.venv-visual{,/**/*}",
       "!test{,/**/*}",
       "!scripts{,/**/*}",
@@ -52,6 +57,13 @@
       {
         "from": "resources/mascot.png",
         "to": "mascot.png"
+      },
+      {
+        "from": "resources/ocr/",
+        "to": "ocr/",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {

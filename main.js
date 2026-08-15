@@ -2,11 +2,15 @@ const { app, BrowserWindow, ipcMain, dialog, session, shell, Tray, Menu } = requ
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
+const {
+  AnalysisJobStore, AnalysisQueue, GpuScheduler, JOB_STAGE, ReportManager
+} = require('./analysis-jobs');
+const { StructuredLogger } = require('./structured-log');
 const { DownloadManager, JOB_STATES, PROGRESS_PREFIX, parseYtDlpProgress } = require('./download-manager');
 const { ContentOpsBridge } = require('./contentops-bridge');
 const { YouTubeAuthSession, isAuthRequired, redactSensitive } = require('./auth-session');
 const { YouTubeIngestionService, classifyIngestionError } = require('./services/youtube');
-const { ModelFindingCache, PolicyJudgeService, loadPolicyJudgeConfig } = require('./services/policyJudge');
+const { ModelFindingCache, POLICY_JUDGE_PROMPT_VERSION, PolicyJudgeService, loadPolicyJudgeConfig } = require('./services/policyJudge');
 const { LocalQwenProvider, PolicyJudgeError } = require('./services/policyJudge/provider');
 const { loadPolicySet } = require('./services/policyKnowledge');
 const {
@@ -39,6 +43,8 @@ let contentOpsBridge = null;
 let policyJudge = null;
 let visualRisk = null;
 let visualMedia = null;
+let analysisQueue = null;
+const gpuScheduler = new GpuScheduler();
 const latestAnalysisRequests = new Map();
 const activeAnalysisControllers = new Map();
 const MAX_CONCURRENT_DOWNLOADS = 2;
@@ -56,21 +62,28 @@ const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 const logPath = path.join(app.getPath('userData'), 'app_debug.log');
 const jobsPath = path.join(app.getPath('userData'), 'download-jobs.json');
 const contentOpsRecordsPath = path.join(app.getPath('userData'), 'contentops-handoffs.json');
+const analysisJobsPath = path.join(app.getPath('userData'), 'analysis-jobs.json');
+const reportsPath = path.join(app.getPath('userData'), 'reports');
+const exportsPath = path.join(app.getPath('userData'), 'exports');
+const logsPath = path.join(app.getPath('userData'), 'logs');
 const contentOpsBridgePort = Number.parseInt(process.env.CONTENTOPS_BRIDGE_PORT || '8790', 10);
 const contentOpsHeadless = process.env.CONTENTOPS_HEADLESS === '1';
 
 const spawnEnv = { ...process.env };
+const appLogger = new StructuredLogger({ filePath: path.join(logsPath, 'app.log') });
+const jobsLogger = new StructuredLogger({ filePath: path.join(logsPath, 'jobs.log') });
 
 // Persistent Settings Manager
 function getSettings() {
+  const defaults = { savePath: app.getPath('downloads'), keepReportsDays: 0 };
   try {
     if (fs.existsSync(settingsPath)) {
-      return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      return { ...defaults, ...JSON.parse(fs.readFileSync(settingsPath, 'utf8')) };
     }
   } catch (e) {
     logToFile('Error reading settings.json: ' + e.message);
   }
-  return { savePath: app.getPath('downloads') };
+  return defaults;
 }
 
 function saveSettings(settings) {
@@ -91,6 +104,7 @@ function logToFile(message) {
   const timestamp = new Date().toISOString();
   const logEntry = `[${timestamp}] ${message}\n`;
   fs.appendFileSync(logPath, logEntry, 'utf8');
+  appLogger.write({ event: 'app', message });
 }
 
 // Verification & Startup
@@ -268,33 +282,57 @@ async function downloadVisualProxy(url, workDir, signal) {
   });
 }
 
-ipcMain.handle('analyze-youtube-video', async (event, { url, requestId }) => {
-  const senderId = event.sender.id;
-  activeAnalysisControllers.get(senderId)?.abort();
-  const controller = new AbortController();
-  activeAnalysisControllers.set(senderId, controller);
-  latestAnalysisRequests.set(senderId, requestId);
-  const onStage = stage => {
-    if (latestAnalysisRequests.get(senderId) === requestId && !event.sender.isDestroyed()) {
-      event.sender.send('analysis-stage', { requestId, stage });
-    }
+async function runFullAnalysis(url, { signal, onStage = () => {}, checkpointDir = null, analysisVersion = null, stopAfterText = false, unloadVisualAfter = true } = {}) {
+  const timing = { started: Date.now(), transcriptStarted: null, proxyStarted: null, visualStarted: null };
+  const trackedStage = stage => {
+    if (stage === 'transcript' && !timing.transcriptStarted) timing.transcriptStarted = Date.now();
+    if (stage === 'visual_proxy' && !timing.proxyStarted) timing.proxyStarted = Date.now();
+    if (stage === 'visual_sampling' && !timing.visualStarted) timing.visualStarted = Date.now();
+    onStage(stage);
+  };
+  const readCheckpoint = name => {
+    if (!checkpointDir) return null;
+    try {
+      const value = JSON.parse(fs.readFileSync(path.join(checkpointDir, `${name}.json`), 'utf8'));
+      return value.analysisVersion === analysisVersion ? value.data : null;
+    } catch (_) { return null; }
+  };
+  const writeCheckpoint = (name, data) => {
+    if (!checkpointDir) return;
+    fs.mkdirSync(checkpointDir, { recursive: true });
+    const target = path.join(checkpointDir, `${name}.json`); const temp = `${target}.tmp`;
+    fs.writeFileSync(temp, JSON.stringify({ analysisVersion, data }), 'utf8'); fs.renameSync(temp, target);
   };
   try {
-    const health = await policyJudge.healthCheck({ signal: controller.signal });
-    if (!health.ok) throw new PolicyJudgeError(health.code, health.message);
-    const ingestion = await youtubeAuth.withTemporaryCookies(cookiesPath =>
-      youtubeIngestion.ingest(url, { cookiesPath, onStage, signal: controller.signal })
-    );
-    const textResult = await policyJudge.analyzeIngestion(ingestion, { onStage, signal: controller.signal, skipHealthCheck: true, deferCompletion: true });
+    let ingestion = readCheckpoint('transcript');
+    if (ingestion) { trackedStage('metadata'); trackedStage('transcript'); }
+    else {
+      ingestion = await youtubeAuth.withTemporaryCookies(cookiesPath => youtubeIngestion.ingest(url, { cookiesPath, onStage: trackedStage, signal }));
+      writeCheckpoint('transcript', ingestion);
+    }
+    const ingestionDone = Date.now();
+    let textResult = readCheckpoint('text');
+    if (textResult) trackedStage('policy');
+    else {
+      const health = await policyJudge.healthCheck({ signal });
+      if (!health.ok) throw new PolicyJudgeError(health.code, health.message);
+      textResult = await gpuScheduler.withGpu('qwen', () => policyJudge.analyzeIngestion(ingestion, { onStage: trackedStage, signal, skipHealthCheck: true, deferCompletion: true }));
+      writeCheckpoint('text', textResult);
+    }
+    if (stopAfterText) return { deferred: true, metadata: ingestion.metadata };
     let data;
     try {
-      onStage('visual_proxy');
-      const visualResult = await visualMedia.withProxy(ingestion, { signal: controller.signal }, (proxyPath, workDir) =>
-        visualRisk.analyze(proxyPath, workDir, ingestion, textResult.segmentJudgments, { onStage, signal: controller.signal })
-      );
-      data = policyJudge.applyVisualAnalysis(textResult, visualResult, visualRisk.config, { onStage });
+      let visualResult = readCheckpoint('visual');
+      if (visualResult) trackedStage('visual_sampling');
+      else {
+        trackedStage('visual_proxy');
+        visualResult = await visualMedia.withProxy(ingestion, { signal }, (proxyPath, workDir) =>
+          gpuScheduler.withGpu('gemma', () => visualRisk.analyze(proxyPath, workDir, ingestion, textResult.segmentJudgments, { onStage: trackedStage, signal, unloadAfter: unloadVisualAfter })));
+        writeCheckpoint('visual', visualResult);
+      }
+      data = policyJudge.applyVisualAnalysis(textResult, visualResult, visualRisk.config, { onStage: trackedStage });
     } catch (visualError) {
-      if (controller.signal.aborted || visualError.code === 'ANALYSIS_CANCELLED' || visualError.cancelled) throw visualError;
+      if (signal?.aborted || visualError.code === 'ANALYSIS_CANCELLED' || visualError.cancelled) throw visualError;
       logToFile(`Visual analysis unavailable: ${visualError.code || visualError.message}`);
       data = policyJudge.applyVisualAnalysis(textResult, {
         visualStatus: 'UNAVAILABLE', visualError: visualError.code || 'VISUAL_SUBSYSTEM_UNAVAILABLE',
@@ -302,26 +340,89 @@ ipcMain.handle('analyze-youtube-video', async (event, { url, requestId }) => {
         framesBySegment: ingestion.transcriptSegments.map(() => []),
         metrics: {
           framesSampled: 0, framesDeduplicated: 0, framesCheapScanned: 0, framesEscalated: 0,
-          ocrCalls: 0, ocrFrames: 0, ocrUsefulFrames: 0, ocrDuplicateSkips: 0,
-          vlmCalls: 0, gemmaCalls: 0, gemmaCallsSkippedByAnchorReuse: 0,
+          ocrCalls: 0, ocrMs: 0, ocrFrames: 0, ocrUsefulFrames: 0, ocrDuplicateSkips: 0,
+          vlmCalls: 0, gemmaMs: 0, gemmaCalls: 0, gemmaCallsSkippedByAnchorReuse: 0,
           visualCacheHits: 0, visualAnalysisMs: 0, newsVisualMs: 0, sceneTypeCounts: {},
           anchorSegments: 0, brollSegments: 0, documentSegments: 0, textHeavySegments: 0
         }
-      }, visualRisk.config, { onStage });
+      }, visualRisk.config, { onStage: trackedStage });
     }
+    const visualMetrics = data.metrics.visual || {};
+    data.metrics = { ...data.metrics,
+      downloadMs: Math.max(0, (timing.visualStarted || Date.now()) - (timing.proxyStarted || Date.now())),
+      transcriptMs: Math.max(0, ingestionDone - (timing.transcriptStarted || timing.started)),
+      textPolicyMs: textResult.metrics.totalAnalysisMs || 0,
+      qwenCalls: textResult.metrics.segmentsSentToQwen || 0, qwenCacheHits: textResult.metrics.cacheHits || 0,
+      visualProxyMs: Math.max(0, (timing.visualStarted || Date.now()) - (timing.proxyStarted || Date.now())),
+      ocrMs: visualMetrics.ocrMs || 0, ocrCalls: visualMetrics.ocrCalls || 0,
+      gemmaMs: visualMetrics.gemmaMs || 0, gemmaCalls: visualMetrics.gemmaCalls || 0,
+      visualCacheHits: visualMetrics.visualCacheHits || 0, totalMs: Date.now() - timing.started };
     logToFile(`Policy judge metrics: ${JSON.stringify(data.metrics)}`);
-    return { ok: true, data };
-  } catch (error) {
-    const safeError = error instanceof PolicyJudgeError
-      ? error
-      : classifyIngestionError(error);
-    logToFile(`Video analysis failed: ${safeError.code}`);
-    return { ok: false, error: { code: safeError.code, message: safeError.message } };
+    return data;
+  } catch (error) { throw error instanceof PolicyJudgeError ? error : classifyIngestionError(error); }
+}
+
+ipcMain.handle('analyze-youtube-video', async (event, { url, requestId }) => {
+  const senderId = event.sender.id;
+  activeAnalysisControllers.get(senderId)?.abort();
+  const controller = new AbortController();
+  activeAnalysisControllers.set(senderId, controller);
+  latestAnalysisRequests.set(senderId, requestId);
+  const onStage = stage => {
+    if (latestAnalysisRequests.get(senderId) === requestId && !event.sender.isDestroyed()) event.sender.send('analysis-stage', { requestId, stage });
+  };
+  try { return { ok: true, data: await runFullAnalysis(url, { signal: controller.signal, onStage }) }; }
+  catch (error) {
+    logToFile(`Video analysis failed: ${error.code || 'ANALYSIS_FAILED'}`);
+    return { ok: false, error: { code: error.code || 'ANALYSIS_FAILED', message: error.message } };
   } finally {
     if (latestAnalysisRequests.get(senderId) === requestId) latestAnalysisRequests.delete(senderId);
     if (activeAnalysisControllers.get(senderId) === controller) activeAnalysisControllers.delete(senderId);
   }
 });
+
+ipcMain.handle('enqueue-analysis-jobs', (_event, text, options) => analysisQueue.enqueueText(text, options));
+ipcMain.handle('get-analysis-jobs', (_event, filters) => analysisQueue ? { jobs: analysisQueue.list(filters), summary: analysisQueue.summary(), paused: analysisQueue.store.state.paused, database: analysisQueue.store.health } : { jobs: [], summary: {}, paused: false });
+ipcMain.handle('pause-analysis-queue', () => { analysisQueue.pause(); return true; });
+ipcMain.handle('resume-analysis-queue', () => { analysisQueue.resume(); return true; });
+ipcMain.handle('cancel-analysis-job', (_event, id) => analysisQueue.cancel(id));
+ipcMain.handle('cancel-all-analysis-jobs', () => analysisQueue.cancelAll());
+ipcMain.handle('retry-analysis-job', (_event, id) => analysisQueue.retry(id));
+ipcMain.handle('reanalyze-job', (_event, id) => analysisQueue.reanalyze(id));
+ipcMain.handle('open-analysis-report', async (_event, id) => {
+  const job = analysisQueue.store.get(id); return job?.htmlReportPath ? shell.openPath(job.htmlReportPath) : 'Report unavailable.';
+});
+ipcMain.handle('get-analysis-result', (_event, id) => {
+  const job = analysisQueue.store.get(id);
+  if (!job?.resultPath || !fs.existsSync(job.resultPath)) return null;
+  const report = JSON.parse(fs.readFileSync(job.resultPath, 'utf8'));
+  return { title: report.metadata.title, durationSeconds: report.metadata.durationSeconds,
+    overallDecision: report.overallDecision, segments: report.segmentJudgments,
+    recommendedClips: report.safeWindows.map((item, index) => ({ id: `clip-${index + 1}`, startSeconds: item.start,
+      endSeconds: item.end, startLabel: String(item.start), endLabel: String(item.end), decision: 'KEEP', transcript: '' })) };
+});
+ipcMain.handle('export-analysis-batch', (_event, format) => {
+  if (!['csv', 'json'].includes(format)) throw new Error('Unsupported export format.');
+  const output = path.join(exportsPath, `analysis-${new Date().toISOString().replace(/[:.]/g, '-')}.${format}`);
+  return analysisQueue.reports.export(analysisQueue.store.jobs(), format, output);
+});
+ipcMain.handle('clear-policy-cache', () => { policyJudge.cache.entries.clear(); fs.rmSync(policyJudge.cache.filePath, { force: true }); return true; });
+ipcMain.handle('clear-visual-cache', () => { visualRisk.cache.entries.clear(); fs.rmSync(visualRisk.cache.filePath, { force: true }); return true; });
+ipcMain.handle('clear-analysis-reports', async () => {
+  const answer = await dialog.showMessageBox(mainWindow, { type: 'warning', buttons: ['Cancel', 'Clear reports'], defaultId: 0, cancelId: 0,
+    title: 'Clear reports?', message: 'Completed job history remains, but local JSON and HTML report files will be removed.' });
+  if (answer.response !== 1) return false;
+  fs.rmSync(reportsPath, { recursive: true, force: true }); fs.mkdirSync(reportsPath, { recursive: true }); return true;
+});
+function directorySize(root) {
+  if (!fs.existsSync(root)) return 0;
+  return fs.readdirSync(root, { withFileTypes: true }).reduce((total, entry) => {
+    const target = path.join(root, entry.name); return total + (entry.isDirectory() ? directorySize(target) : fs.statSync(target).size);
+  }, 0);
+}
+ipcMain.handle('get-analysis-storage', () => ({ reportsBytes: directorySize(reportsPath), cacheBytes: [policyJudge.cache.filePath, visualRisk.cache.filePath].reduce((sum, file) => sum + (file && fs.existsSync(file) ? fs.statSync(file).size : 0), 0),
+  temporaryMediaBytes: directorySize(visualMedia.tempRoot), keepReportsDays: getSettings().keepReportsDays }));
+ipcMain.handle('set-report-retention', (_event, days) => saveSettings({ keepReportsDays: Math.max(0, Math.min(3650, Number(days) || 0)) }));
 
 ipcMain.handle('get-playlist-data', async (event, url) => {
   if (!ensureBinaryExists(ytdlpPath)) throw new Error('yt-dlp.exe missing');
@@ -528,6 +629,50 @@ app.whenReady().then(async () => {
     sampler: new VisualSamplingService({ ffmpegPath: binaryPaths.ffmpegPath, runProcess, config: visualConfig }),
     cache: new VisualFindingCache({ filePath: path.join(app.getPath('userData'), 'visual-findings-cache.json'), maxEntries: visualConfig.cacheMaxEntries })
   });
+  const policyRepository = policyJudge.repository;
+  const analysisVersions = {
+    policySet: policyRepository.version, qwenModel: judgeConfig.model, qwenPrompt: POLICY_JUDGE_PROMPT_VERSION,
+    visualThresholds: visualConfig.thresholdVersion, gemmaModel: visualConfig.model,
+    gemmaVersion: visualConfig.modelVersion, ocr: 'rapidocr-3.9.2-onnxruntime-1.28.0',
+    newsRouting: visualConfig.detectorVersion
+  };
+  const stageMap = {
+    metadata: JOB_STAGE.METADATA, transcript: JOB_STAGE.TRANSCRIPT, policy: JOB_STAGE.TEXT_POLICY,
+    visual_proxy: JOB_STAGE.VISUAL_PROXY, visual_sampling: JOB_STAGE.VISUAL_ANALYSIS,
+    safe_windows: JOB_STAGE.FINALIZING, complete: JOB_STAGE.FINALIZING
+  };
+  analysisQueue = new AnalysisQueue({
+    store: new AnalysisJobStore({ filePath: analysisJobsPath }),
+    reports: new ReportManager({ reportsDir: reportsPath }), versions: analysisVersions,
+    executor: (job, context) => {
+      const hasLaterVisual = analysisQueue.store.jobs().some(item => item.jobId !== job.jobId && ['QUEUED', 'PAUSED'].includes(item.status));
+      return runFullAnalysis(job.sourceUrl, {
+        signal: context.signal,
+        checkpointDir: path.join(app.getPath('userData'), 'analysis-checkpoints', job.jobId, job.revisionId),
+        analysisVersion: job.analysisVersion,
+        stopAfterText: job.phase !== 'VISUAL', unloadVisualAfter: analysisQueue.store.state.paused || !hasLaterVisual,
+        onStage: stage => { if (stageMap[stage]) context.onStage(stageMap[stage]); }
+      });
+    }
+  });
+  analysisQueue.on('changed', snapshot => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('analysis-jobs-updated', snapshot);
+  });
+  analysisQueue.on('job-event', record => {
+    jobsLogger.write(record);
+    if (analysisQueue.store.state.paused && ['completed', 'failed', 'cancelled'].includes(record.event)) {
+      void visualRisk.provider.unload(visualConfig.model).catch(() => {});
+    }
+  });
+  const keepReportsDays = getSettings().keepReportsDays;
+  if (keepReportsDays > 0 && fs.existsSync(reportsPath)) {
+    const cutoff = Date.now() - keepReportsDays * 86400000;
+    for (const entry of fs.readdirSync(reportsPath, { withFileTypes: true })) {
+      const target = path.join(reportsPath, entry.name);
+      if (entry.isFile() && fs.statSync(target).mtimeMs < cutoff) fs.rmSync(target, { force: true });
+    }
+  }
+  analysisQueue.start();
   if (fs.existsSync(legacyCookiesPath)) {
     logToFile('Legacy cookies.txt retained but disabled; dedicated YouTube session is primary.');
   }
@@ -580,5 +725,7 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('before-quit', () => {
   for (const controller of activeAnalysisControllers.values()) controller.abort();
+  analysisQueue?.active?.controller.abort();
+  analysisQueue?.stop();
   void contentOpsBridge?.stop();
 });

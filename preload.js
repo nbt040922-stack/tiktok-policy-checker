@@ -23,6 +23,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   logoutYouTube: () => ipcRenderer.invoke('logout-youtube'),
   getAuthState: () => ipcRenderer.invoke('get-auth-state'),
   analyzeYouTubeVideo: (url, requestId) => ipcRenderer.invoke('analyze-youtube-video', { url, requestId }),
+  enqueueAnalysisJobs: (text, options) => ipcRenderer.invoke('enqueue-analysis-jobs', text, options),
+  getAnalysisJobs: (filters) => ipcRenderer.invoke('get-analysis-jobs', filters),
+  pauseAnalysisQueue: () => ipcRenderer.invoke('pause-analysis-queue'),
+  resumeAnalysisQueue: () => ipcRenderer.invoke('resume-analysis-queue'),
+  cancelAnalysisJob: (id) => ipcRenderer.invoke('cancel-analysis-job', id),
+  cancelAllAnalysisJobs: () => ipcRenderer.invoke('cancel-all-analysis-jobs'),
+  retryAnalysisJob: (id) => ipcRenderer.invoke('retry-analysis-job', id),
+  reanalyzeJob: (id) => ipcRenderer.invoke('reanalyze-job', id),
+  openAnalysisReport: (id) => ipcRenderer.invoke('open-analysis-report', id),
+  getAnalysisResult: (id) => ipcRenderer.invoke('get-analysis-result', id),
+  exportAnalysisBatch: (format) => ipcRenderer.invoke('export-analysis-batch', format),
+  clearPolicyCache: () => ipcRenderer.invoke('clear-policy-cache'),
+  clearVisualCache: () => ipcRenderer.invoke('clear-visual-cache'),
+  clearAnalysisReports: () => ipcRenderer.invoke('clear-analysis-reports'),
+  getAnalysisStorage: () => ipcRenderer.invoke('get-analysis-storage'),
+  setReportRetention: (days) => ipcRenderer.invoke('set-report-retention', days),
 
   // Download Engine
   getPlaylistData: (url) => ipcRenderer.invoke('get-playlist-data', url),
@@ -41,5 +57,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const listener = (event, data) => callback(data);
     ipcRenderer.on('analysis-stage', listener);
     return () => ipcRenderer.removeListener('analysis-stage', listener);
+  },
+  onAnalysisJobsUpdated: (callback) => {
+    const listener = (_event, data) => callback(data);
+    ipcRenderer.on('analysis-jobs-updated', listener);
+    return () => ipcRenderer.removeListener('analysis-jobs-updated', listener);
   }
 });
