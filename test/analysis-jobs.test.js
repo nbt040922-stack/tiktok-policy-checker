@@ -5,7 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const {
   AnalysisJobStore, AnalysisQueue, GpuScheduler, JOB_STAGE, JOB_STATUS, ReportManager,
-  analysisFingerprint, parseBatchUrls
+  aggregateResult, analysisFingerprint, elapsedMs, parseBatchUrls
 } = require('../analysis-jobs');
 const { StructuredLogger } = require('../structured-log');
 const { ModelFindingCache } = require('../services/policyJudge');
@@ -164,4 +164,24 @@ test('frozen OCR runtime and Phase 6 IPC/doctor/UI contracts are present', async
   assert.match(source('main.js'), /enqueue-analysis-jobs/); assert.match(source('preload.js'), /onAnalysisJobsUpdated/);
   assert.match(source('index.html'), /id="analysisQueue"/); assert.match(source('renderer.js'), /limit: 100/);
   assert.match(source('scripts/doctor.js'), /OCR runtime/); assert.match(source('package.json'), /resources\/ocr\//);
+});
+
+test('wall timing includes transcript fallback and visual work', () => {
+  assert.equal(elapsedMs(1000, () => 16000), 15000);
+});
+
+test('unavailable visual pass hides final safe windows and preserves cause', () => {
+  const f = fixture();
+  try {
+    const incomplete = { ...result(), visualStatus: 'UNAVAILABLE', visualErrorCode: 'VISUAL_PROXY_HTTP_403',
+      visualError: 'HTTP Error 403', ocrStatus: 'UNAVAILABLE', ocrErrorCode: 'VISUAL_PIPELINE_NOT_REACHED',
+      ocrError: 'Visual proxy failed before OCR could start.' };
+    const output = f.reports.write({ videoId: 'abc123xyz', revisionId: 'r1', sourceUrl: 'url', modelVersions: {}, analysisVersion: 'a', policyVersion: 'p' }, incomplete);
+    assert.equal(output.report.videoResult, 'INCOMPLETE'); assert.equal(output.report.safeWindows.length, 0);
+    assert.match(output.report.warnings.join(' '), /VISUAL_PROXY_HTTP_403|VISUAL_PIPELINE_NOT_REACHED/);
+  } finally { f.cleanup(); }
+});
+
+test('successful visual pass with OCR not required remains complete', () => {
+  assert.equal(aggregateResult({ ...result(), ocrStatus: 'NOT_USED' }), 'SAFE');
 });

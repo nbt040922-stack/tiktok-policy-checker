@@ -3,13 +3,17 @@ const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 const {
-  AnalysisJobStore, AnalysisQueue, GpuScheduler, JOB_STAGE, ReportManager
+  AnalysisJobStore, AnalysisQueue, GpuScheduler, JOB_STAGE, ReportManager, elapsedMs
 } = require('./analysis-jobs');
 const { StructuredLogger } = require('./structured-log');
 const { DownloadManager, JOB_STATES, PROGRESS_PREFIX, parseYtDlpProgress } = require('./download-manager');
 const { ContentOpsBridge } = require('./contentops-bridge');
+const { clearEphemeralState } = require('./ephemeral-state');
 const { YouTubeAuthSession, isAuthRequired, redactSensitive } = require('./auth-session');
-const { YouTubeIngestionService, classifyIngestionError } = require('./services/youtube');
+const { YouTubeIngestionService, classifyIngestionError, fetchSubtitleWithRetry } = require('./services/youtube');
+const { ExtensionManager } = require('./services/youtube/extensionTranscript/extensionManager');
+const { TranscriptBrowserManager } = require('./services/youtube/extensionTranscript/transcriptBrowserManager');
+const { TimedTextCircuitBreaker, TranscriptProviderChain } = require('./services/youtube/providerChain');
 const { ModelFindingCache, POLICY_JUDGE_PROMPT_VERSION, PolicyJudgeService, loadPolicyJudgeConfig } = require('./services/policyJudge');
 const { LocalQwenProvider, PolicyJudgeError } = require('./services/policyJudge/provider');
 const { loadPolicySet } = require('./services/policyKnowledge');
@@ -39,11 +43,14 @@ let updateInFlight = null;
 let downloadManager = null;
 let youtubeAuth = null;
 let youtubeIngestion = null;
+let transcriptExtension = null;
+let transcriptBrowser = null;
 let contentOpsBridge = null;
 let policyJudge = null;
 let visualRisk = null;
 let visualMedia = null;
 let analysisQueue = null;
+let quitCleanupStarted = false;
 const gpuScheduler = new GpuScheduler();
 const latestAnalysisRequests = new Map();
 const activeAnalysisControllers = new Map();
@@ -69,6 +76,7 @@ const logsPath = path.join(app.getPath('userData'), 'logs');
 const contentOpsBridgePort = Number.parseInt(process.env.CONTENTOPS_BRIDGE_PORT || '8790', 10);
 const contentOpsHeadless = process.env.CONTENTOPS_HEADLESS === '1';
 
+clearEphemeralState(app.getPath('userData'));
 const spawnEnv = { ...process.env };
 const appLogger = new StructuredLogger({ filePath: path.join(logsPath, 'app.log') });
 const jobsLogger = new StructuredLogger({ filePath: path.join(logsPath, 'jobs.log') });
@@ -235,6 +243,8 @@ ipcMain.handle('get-engine-status', () => latestDiagnostics);
 ipcMain.handle('get-auth-state', () => youtubeAuth?.state || 'UNKNOWN');
 ipcMain.handle('login-youtube', () => youtubeAuth.login());
 ipcMain.handle('logout-youtube', () => youtubeAuth.logout());
+ipcMain.handle('open-youtube-transcript-session', () => transcriptBrowser.openSession());
+ipcMain.handle('get-transcript-extension-health', () => transcriptExtension?.health || { status: 'EXTENSION_NOT_FOUND' });
 
 ipcMain.on('cancel-all-downloads', () => {
   downloadManager?.cancelAll('user');
@@ -271,21 +281,25 @@ async function downloadVisualProxy(url, workDir, signal) {
   return youtubeAuth.withTemporaryCookies(async cookiesPath => {
     const outputTemplate = path.join(workDir, 'proxy.%(ext)s');
     const args = [
-      ...buildYtDlpBaseArgs({ paths: binaryPaths, cookiesPath, jsRuntime: false }), '--no-playlist', '--no-part',
+      ...buildYtDlpBaseArgs({ paths: binaryPaths, cookiesPath }), '--no-playlist', '--no-part',
+      '--extractor-args', 'youtube:player_client=web',
       '-f', '18/best[height<=360]/bestvideo[height<=360]/worst', '--output', outputTemplate, url
     ];
     const result = await runProcess(ytdlpPath, args, { env: spawnEnv, timeoutMs: 0, signal });
-    if (!result.ok) throw Object.assign(new Error(result.error || result.stderr || 'Visual proxy download failed.'), { cancelled: result.cancelled });
+    if (!result.ok) {
+      const message = result.error || result.stderr || 'Visual proxy download failed.';
+      const code = result.cancelled ? 'ANALYSIS_CANCELLED' : /HTTP Error 403/i.test(message) ? 'VISUAL_PROXY_HTTP_403' : 'VISUAL_PROXY_DOWNLOAD_FAILED';
+      throw Object.assign(new Error(message), { code, cancelled: result.cancelled, stage: 'VISUAL_PROXY' });
+    }
     const proxy = fs.readdirSync(workDir).map(name => path.join(workDir, name)).find(file => /^proxy\./.test(path.basename(file)) && !file.endsWith('.part'));
     if (!proxy) throw new Error('Visual proxy download produced no media file.');
     return proxy;
   });
 }
 
-async function runFullAnalysis(url, { signal, onStage = () => {}, checkpointDir = null, analysisVersion = null, stopAfterText = false, unloadVisualAfter = true } = {}) {
-  const timing = { started: Date.now(), transcriptStarted: null, proxyStarted: null, visualStarted: null };
+async function runFullAnalysis(url, { signal, jobId = null, analysisStartedAtMs = null, onStage = () => {}, onTranscriptProvider = () => {}, checkpointDir = null, analysisVersion = null, stopAfterText = false, unloadVisualAfter = true } = {}) {
+  const timing = { started: analysisStartedAtMs || Date.now(), proxyStarted: null, proxyDone: null, visualStarted: null };
   const trackedStage = stage => {
-    if (stage === 'transcript' && !timing.transcriptStarted) timing.transcriptStarted = Date.now();
     if (stage === 'visual_proxy' && !timing.proxyStarted) timing.proxyStarted = Date.now();
     if (stage === 'visual_sampling' && !timing.visualStarted) timing.visualStarted = Date.now();
     onStage(stage);
@@ -307,36 +321,56 @@ async function runFullAnalysis(url, { signal, onStage = () => {}, checkpointDir 
     let ingestion = readCheckpoint('transcript');
     if (ingestion) { trackedStage('metadata'); trackedStage('transcript'); }
     else {
-      ingestion = await youtubeAuth.withTemporaryCookies(cookiesPath => youtubeIngestion.ingest(url, { cookiesPath, onStage: trackedStage, signal }));
+      ingestion = await youtubeAuth.withTemporaryCookies(cookiesPath => youtubeIngestion.ingest(url,
+        { cookiesPath, jobId, onStage: trackedStage, onProviderAttempt: onTranscriptProvider, signal }));
       writeCheckpoint('transcript', ingestion);
     }
-    const ingestionDone = Date.now();
     let textResult = readCheckpoint('text');
     if (textResult) trackedStage('policy');
     else {
+      logToFile(`Policy pipeline: ${JSON.stringify({ event: 'TEXT_POLICY_START', jobId, videoId: ingestion.metadata.videoId })}`);
       const health = await policyJudge.healthCheck({ signal });
       if (!health.ok) throw new PolicyJudgeError(health.code, health.message);
       textResult = await gpuScheduler.withGpu('qwen', () => policyJudge.analyzeIngestion(ingestion, { onStage: trackedStage, signal, skipHealthCheck: true, deferCompletion: true }));
+      logToFile(`Policy pipeline: ${JSON.stringify({ event: 'TEXT_POLICY_SUCCESS', jobId, videoId: ingestion.metadata.videoId, duration: textResult.metrics.totalAnalysisMs })}`);
       writeCheckpoint('text', textResult);
     }
     if (stopAfterText) return { deferred: true, metadata: ingestion.metadata };
-    let data;
+    let data; let finalizeStarted = null;
+    let visualFailureStage = null;
     try {
       let visualResult = readCheckpoint('visual');
       if (visualResult) trackedStage('visual_sampling');
       else {
         trackedStage('visual_proxy');
-        visualResult = await visualMedia.withProxy(ingestion, { signal }, (proxyPath, workDir) =>
-          gpuScheduler.withGpu('gemma', () => visualRisk.analyze(proxyPath, workDir, ingestion, textResult.segmentJudgments, { onStage: trackedStage, signal, unloadAfter: unloadVisualAfter })));
+        logToFile(`Visual pipeline: ${JSON.stringify({ event: 'VISUAL_PROXY_START', jobId, videoId: ingestion.metadata.videoId })}`);
+        visualFailureStage = 'VISUAL_PROXY';
+        visualResult = await visualMedia.withProxy(ingestion, { signal }, async (proxyPath, workDir) => {
+          timing.proxyDone = Date.now();
+          logToFile(`Visual pipeline: ${JSON.stringify({ event: 'VISUAL_PROXY_SUCCESS', jobId, videoId: ingestion.metadata.videoId, duration: timing.proxyDone - timing.proxyStarted })}`);
+          visualFailureStage = 'VISUAL_ANALYSIS';
+          logToFile(`Visual pipeline: ${JSON.stringify({ event: 'VISUAL_ANALYSIS_START', jobId, videoId: ingestion.metadata.videoId })}`);
+          const result = await gpuScheduler.withGpu('gemma', () => visualRisk.analyze(proxyPath, workDir, ingestion, textResult.segmentJudgments, { onStage: trackedStage, signal, unloadAfter: unloadVisualAfter }));
+          logToFile(`Visual pipeline: ${JSON.stringify({ event: 'VISUAL_ANALYSIS_SUCCESS', jobId, videoId: ingestion.metadata.videoId, duration: result.metrics.visualAnalysisMs })}`);
+          return result;
+        });
+        visualResult.metrics.visualProxyMs = timing.proxyDone - timing.proxyStarted;
         writeCheckpoint('visual', visualResult);
       }
+      finalizeStarted = Date.now();
       data = policyJudge.applyVisualAnalysis(textResult, visualResult, visualRisk.config, { onStage: trackedStage });
     } catch (visualError) {
       if (signal?.aborted || visualError.code === 'ANALYSIS_CANCELLED' || visualError.cancelled) throw visualError;
-      logToFile(`Visual analysis unavailable: ${visualError.code || visualError.message}`);
+      const failureStage = visualError.stage || visualFailureStage || 'VISUAL_ANALYSIS';
+      const errorCode = visualError.code || (failureStage === 'VISUAL_PROXY' ? 'VISUAL_PROXY_DOWNLOAD_FAILED' : 'VISUAL_ANALYSIS_FAILED');
+      logToFile(`Visual pipeline: ${JSON.stringify({ event: `${failureStage}_FAILURE`, jobId, videoId: ingestion.metadata.videoId,
+        stage: failureStage, errorCode, technicalMessage: String(visualError.message || errorCode).slice(0, 500) })}`);
+      finalizeStarted = Date.now();
       data = policyJudge.applyVisualAnalysis(textResult, {
-        visualStatus: 'UNAVAILABLE', visualError: visualError.code || 'VISUAL_SUBSYSTEM_UNAVAILABLE',
-        ocrStatus: 'UNAVAILABLE', ocrError: visualError.code || 'VISUAL_SUBSYSTEM_UNAVAILABLE',
+        visualStatus: 'UNAVAILABLE', visualErrorCode: errorCode, visualError: String(visualError.message || errorCode).slice(0, 500),
+        visualFailureStage: failureStage, ocrStatus: 'UNAVAILABLE',
+        ocrErrorCode: failureStage === 'VISUAL_PROXY' ? 'VISUAL_PIPELINE_NOT_REACHED' : 'VISUAL_PIPELINE_INTERRUPTED',
+        ocrError: failureStage === 'VISUAL_PROXY' ? 'Visual proxy failed before OCR could start.' : 'Visual analysis ended before OCR status could be established.',
         framesBySegment: ingestion.transcriptSegments.map(() => []),
         metrics: {
           framesSampled: 0, framesDeduplicated: 0, framesCheapScanned: 0, framesEscalated: 0,
@@ -348,15 +382,20 @@ async function runFullAnalysis(url, { signal, onStage = () => {}, checkpointDir 
       }, visualRisk.config, { onStage: trackedStage });
     }
     const visualMetrics = data.metrics.visual || {};
+    const transcriptMetrics = textResult.transcriptMetrics || {};
     data.metrics = { ...data.metrics,
-      downloadMs: Math.max(0, (timing.visualStarted || Date.now()) - (timing.proxyStarted || Date.now())),
-      transcriptMs: Math.max(0, ingestionDone - (timing.transcriptStarted || timing.started)),
+      downloadMs: visualMetrics.visualProxyMs || 0,
       textPolicyMs: textResult.metrics.totalAnalysisMs || 0,
       qwenCalls: textResult.metrics.segmentsSentToQwen || 0, qwenCacheHits: textResult.metrics.cacheHits || 0,
-      visualProxyMs: Math.max(0, (timing.visualStarted || Date.now()) - (timing.proxyStarted || Date.now())),
+      visualProxyMs: visualMetrics.visualProxyMs || (timing.proxyStarted ? Math.max(0, (timing.proxyDone || Date.now()) - timing.proxyStarted) : 0),
+      visualAnalysisMs: visualMetrics.visualAnalysisMs || 0,
       ocrMs: visualMetrics.ocrMs || 0, ocrCalls: visualMetrics.ocrCalls || 0,
       gemmaMs: visualMetrics.gemmaMs || 0, gemmaCalls: visualMetrics.gemmaCalls || 0,
-      visualCacheHits: visualMetrics.visualCacheHits || 0, totalMs: Date.now() - timing.started };
+      visualCacheHits: visualMetrics.visualCacheHits || 0, ...transcriptMetrics,
+      transcriptProviderUsed: textResult.transcriptProvider?.provider || 'DIRECT_CAPTION', totalMs: elapsedMs(timing.started) };
+    data.metrics.finalizeMs = Date.now() - finalizeStarted;
+    data.metrics.totalMs = elapsedMs(timing.started);
+    logToFile(`Policy pipeline: ${JSON.stringify({ event: 'FINALIZE_SUCCESS', jobId, videoId: ingestion.metadata.videoId, duration: data.metrics.finalizeMs })}`);
     logToFile(`Policy judge metrics: ${JSON.stringify(data.metrics)}`);
     return data;
   } catch (error) { throw error instanceof PolicyJudgeError ? error : classifyIngestionError(error); }
@@ -397,7 +436,7 @@ ipcMain.handle('get-analysis-result', (_event, id) => {
   if (!job?.resultPath || !fs.existsSync(job.resultPath)) return null;
   const report = JSON.parse(fs.readFileSync(job.resultPath, 'utf8'));
   return { title: report.metadata.title, durationSeconds: report.metadata.durationSeconds,
-    overallDecision: report.overallDecision, segments: report.segmentJudgments,
+    overallDecision: report.videoResult === 'INCOMPLETE' ? 'INCOMPLETE' : report.overallDecision, segments: report.segmentJudgments,
     recommendedClips: report.safeWindows.map((item, index) => ({ id: `clip-${index + 1}`, startSeconds: item.start,
       endSeconds: item.end, startLabel: String(item.start), endLabel: String(item.end), decision: 'KEEP', transcript: '' })) };
 });
@@ -613,7 +652,20 @@ app.whenReady().then(async () => {
     logger: record => logToFile(`Auth: ${redactSensitive(JSON.stringify(record))}`)
   });
   await youtubeAuth.initialize();
-  youtubeIngestion = new YouTubeIngestionService({ getRawMetadata: fetchMetadataWithCookies });
+  transcriptExtension = new ExtensionManager({
+    userDataPath: app.getPath('userData'), sessionFromPartition: (partition, options) => session.fromPartition(partition, options),
+    logger: record => logToFile(`Transcript extension: ${JSON.stringify(record)}`)
+  });
+  transcriptBrowser = new TranscriptBrowserManager({
+    extensionManager: transcriptExtension, createBrowserWindow: options => new BrowserWindow(options),
+    logger: record => logToFile(`Transcript provider: ${JSON.stringify(record)}`)
+  });
+  const transcriptProviders = new TranscriptProviderChain({
+    fetchDirect: (track, signal) => fetchSubtitleWithRetry(track, globalThis.fetch, signal),
+    extensionProvider: transcriptBrowser, circuitBreaker: new TimedTextCircuitBreaker(),
+    logger: record => logToFile(`Transcript provider: ${JSON.stringify(record)}`)
+  });
+  youtubeIngestion = new YouTubeIngestionService({ getRawMetadata: fetchMetadataWithCookies, providerChain: transcriptProviders });
   const judgeConfig = loadPolicyJudgeConfig();
   policyJudge = new PolicyJudgeService({
     repository: loadPolicySet(),
@@ -647,10 +699,13 @@ app.whenReady().then(async () => {
     executor: (job, context) => {
       const hasLaterVisual = analysisQueue.store.jobs().some(item => item.jobId !== job.jobId && ['QUEUED', 'PAUSED'].includes(item.status));
       return runFullAnalysis(job.sourceUrl, {
+        jobId: job.jobId,
+        analysisStartedAtMs: new Date(job.startedAt).getTime(),
         signal: context.signal,
         checkpointDir: path.join(app.getPath('userData'), 'analysis-checkpoints', job.jobId, job.revisionId),
         analysisVersion: job.analysisVersion,
         stopAfterText: job.phase !== 'VISUAL', unloadVisualAfter: analysisQueue.store.state.paused || !hasLaterVisual,
+        onTranscriptProvider: provider => context.onStage(JOB_STAGE.TRANSCRIPT, { transcriptProviderAttempt: provider }),
         onStage: stage => { if (stageMap[stage]) context.onStage(stageMap[stage]); }
       });
     }
@@ -723,9 +778,23 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('before-quit', () => {
+app.on('before-quit', event => {
+  if (quitCleanupStarted) return;
+  event.preventDefault();
+  quitCleanupStarted = true;
   for (const controller of activeAnalysisControllers.values()) controller.abort();
   analysisQueue?.active?.controller.abort();
   analysisQueue?.stop();
-  void contentOpsBridge?.stop();
+  transcriptBrowser?.destroy();
+  Promise.allSettled([
+    session.fromPartition('').clearCache(),
+    youtubeAuth?.session.clearCache() || Promise.resolve(),
+    contentOpsBridge?.stop() || Promise.resolve()
+  ]).finally(() => {
+    clearEphemeralState(app.getPath('userData'));
+    app.quit();
+  });
+});
+app.on('will-quit', () => {
+  clearEphemeralState(app.getPath('userData'));
 });

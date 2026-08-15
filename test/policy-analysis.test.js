@@ -97,7 +97,10 @@ test('main process reuses auth and keeps transcript ingestion media-free before 
   assert.match(main, /youtubeAuth\.withTemporaryCookies/);
   assert.match(main, /'--no-playlist', '--skip-download', '--dump-single-json'/);
   assert.match(main, /downloadVisualProxy[\s\S]*18\/best\[height<=360\]\/bestvideo\[height<=360\]/);
-  assert.match(main, /downloadVisualProxy[\s\S]*jsRuntime: false/);
+  assert.match(main, /downloadVisualProxy[\s\S]*youtube:player_client=web/);
+  assert.doesNotMatch(main.match(/async function downloadVisualProxy[\s\S]*?\n}/)?.[0] || '', /jsRuntime: false/);
+  assert.match(main, /visualRisk\.analyze\([\s\S]*?textResult\.segmentJudgments/);
+  assert.doesNotMatch(main, /(?:allTextKeep|segmentsPrefiltered\s*===\s*[^\n]+)[\s\S]{0,100}return/);
   assert.match(main, /ipcMain\.handle\('analyze-youtube-video'/);
   assert.match(main, /activeAnalysisControllers\.get\(senderId\)\?\.abort\(\)/);
   assert.match(preload, /analyzeYouTubeVideo/);

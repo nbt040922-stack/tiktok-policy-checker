@@ -49,7 +49,7 @@ async function renderQueue(snapshot) {
         : `Queued ${summary.queued || 0} · Running ${summary.running || 0} · Completed ${summary.completed || 0}`;
     document.getElementById('pauseQueueBtn').textContent = queuePaused ? 'Resume' : 'Pause';
     analysisJobList.innerHTML = jobs.length ? jobs.map(job => `<article class="analysis-job">
-        <div class="job-copy"><strong>${escapeHtml(job.title || job.sourceUrl)}</strong><small>${escapeHtml(job.stage)} · ${escapeHtml(job.status)}${job.stale ? ' · STALE' : ''}${job.lastError ? ` · ${escapeHtml(job.lastError.userMessage)}` : ''}</small></div>
+        <div class="job-copy"><strong>${escapeHtml(job.title || job.sourceUrl)}</strong><small>${escapeHtml(job.stage)} · ${escapeHtml(job.status)}${job.transcriptProviderAttempt ? ` · Transcript: ${job.transcriptProviderAttempt === 'EMBEDDED_EXTENSION' ? 'Browser fallback' : 'Direct'}` : ''}${job.stale ? ' · STALE' : ''}${job.lastError ? ` · ${escapeHtml(job.lastError.userMessage)}` : ''}</small></div>
         <div class="job-progress"><span style="width:${Math.max(0, Math.min(100, job.progress || 0))}%"></span></div>
         <span class="job-result">${escapeHtml(job.overallResult || `${job.progress || 0}%`)}</span><div class="job-actions">${queueAction(job)}</div>
     </article>`).join('') : '<p class="queue-empty">No analysis jobs yet.</p>';
@@ -213,6 +213,11 @@ resultFilter.addEventListener('change', refreshQueue);
 document.getElementById('clearQwenBtn').addEventListener('click', async () => { await window.electronAPI.clearPolicyCache(); refreshStorage(); });
 document.getElementById('clearVisualBtn').addEventListener('click', async () => { await window.electronAPI.clearVisualCache(); refreshStorage(); });
 document.getElementById('clearReportsBtn').addEventListener('click', async () => { await window.electronAPI.clearAnalysisReports(); refreshStorage(); });
+document.getElementById('openTranscriptSessionBtn').addEventListener('click', () => window.electronAPI.openYouTubeTranscriptSession());
+window.electronAPI.getTranscriptExtensionHealth().then(health => {
+    document.getElementById('transcriptExtensionStatus').textContent = health.status === 'EXTENSION_READY'
+        ? `Transcript fallback: ready (${health.version})` : 'Transcript fallback: not provisioned';
+});
 document.getElementById('retentionDays').addEventListener('change', async event => { await window.electronAPI.setReportRetention(event.target.value); refreshStorage(); });
 window.electronAPI.onAnalysisJobsUpdated(renderQueue);
 document.addEventListener('keydown', event => {

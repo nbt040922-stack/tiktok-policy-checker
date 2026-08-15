@@ -92,3 +92,7 @@ PASS: no lost jobs, duplicate handling, pause/resume, queued/running cancellatio
 NOT VALIDATED: 20 real completions, cold/warm throughput, Qwen/Gemma load/unload and VRAM creep, end-to-end OCR, five HTML reports, HTML/JSON comparison, completed-history search, revisions, stale completed analysis, deterministic repeated results, report integrity, duration-weighted throughput.
 
 Phase 6.1 must be rerun before changing the operational verdict from `NOT_READY`.
+
+## Phase 6.1.2 rerun note — 2026-08-15
+
+The embedded extension provider was exercised after this report. A second manifest video, `ooiOo4WjutY`, recovered from timed-text HTTP 429 through YouTube `get_panel` HTTP 200 and returned 19 timestamped cues in 10.586 seconds. The exact prior blocker video, `wxEpPin8MWw`, still timed out without transcript DOM after 45 seconds. No five- or twenty-video rerun was started, so all previous blocked evidence and the `NOT_READY` verdict remain unchanged.

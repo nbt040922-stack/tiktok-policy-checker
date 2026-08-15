@@ -81,7 +81,7 @@ test('temporary subtitle rate limit remains retryable', async () => {
   await assert.rejects(fetchSubtitle(
     { ext: 'json3', url: 'subtitle' },
     async () => ({ ok: false, status: 429 })
-  ), error => error.code === 'NETWORK_ERROR');
+  ), error => error.code === 'YOUTUBE_RATE_LIMITED' && error.httpStatus === 429 && error.retryableTranscriptTransport);
 });
 
 test('ingestion reports no transcript without downloading media', async () => {

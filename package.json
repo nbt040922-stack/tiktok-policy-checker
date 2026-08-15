@@ -17,6 +17,8 @@
     "test:crash-recovery": "node scripts/test-analysis-crash-recovery.js",
     "poc:extension:prepare": "node scripts/extension-poc/prepare-extension.js",
     "poc:extension": "electron scripts/extension-poc/main.js",
+    "transcript:extension:doctor": "node scripts/transcript-extension-doctor.js",
+    "transcript:extension:test": "electron scripts/transcript-extension-test.js",
     "preflight": "node scripts/preflight.js",
     "build": "electron-builder",
     "dist": "electron-builder"

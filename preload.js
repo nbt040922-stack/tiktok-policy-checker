@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   loginYouTube: () => ipcRenderer.invoke('login-youtube'),
   logoutYouTube: () => ipcRenderer.invoke('logout-youtube'),
   getAuthState: () => ipcRenderer.invoke('get-auth-state'),
+  openYouTubeTranscriptSession: () => ipcRenderer.invoke('open-youtube-transcript-session'),
+  getTranscriptExtensionHealth: () => ipcRenderer.invoke('get-transcript-extension-health'),
   analyzeYouTubeVideo: (url, requestId) => ipcRenderer.invoke('analyze-youtube-video', { url, requestId }),
   enqueueAnalysisJobs: (text, options) => ipcRenderer.invoke('enqueue-analysis-jobs', text, options),
   getAnalysisJobs: (filters) => ipcRenderer.invoke('get-analysis-jobs', filters),

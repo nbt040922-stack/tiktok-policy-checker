@@ -5,9 +5,10 @@ const { spawnSync } = require('node:child_process');
 const { loadPolicyJudgeConfig } = require('../services/policyJudge');
 const { loadPolicySet } = require('../services/policyKnowledge');
 const { loadVisualRiskConfig } = require('../services/visualRisk');
+const { inspectExtension, resolveExtensionPath } = require('../services/youtube/extensionTranscript/extensionManager');
 
 const root = path.join(__dirname, '..');
-const userData = process.env.DOCTOR_USER_DATA || path.join(process.env.APPDATA || os.homedir(), 'TikTok Policy Checker');
+const userData = process.env.DOCTOR_USER_DATA || path.join(process.env.APPDATA || os.homedir(), 'tiktok-policy-checker');
 const rows = [];
 const add = (name, status, detail) => rows.push({ name, status, detail });
 const run = (file, args, timeout = 30000) => spawnSync(file, args, { encoding: 'utf8', windowsHide: true, timeout, env: { ...process.env, PATH: '' } });
@@ -42,6 +43,9 @@ async function main() {
   } catch (error) { add('Job database', 'FAIL', `${database} · ${error.message}`); }
   add('Cache paths', 'PASS', path.join(userData, '*-cache.json'));
   add('Report path', 'PASS', path.join(userData, 'reports'));
+  const extension = inspectExtension(resolveExtensionPath(userData));
+  add('Transcript extension', extension.status === 'EXTENSION_READY' ? 'PASS' : extension.status === 'EXTENSION_NOT_FOUND' ? 'WARN' : 'FAIL',
+    `${extension.status} · ${extension.extensionPath}`);
   console.table(rows);
   if (rows.some(row => row.status === 'FAIL')) process.exitCode = 1;
 }

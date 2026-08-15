@@ -20,6 +20,7 @@ const RETRYABLE_CODES = new Set(['NETWORK_ERROR', 'YOUTUBE_RATE_LIMITED', 'YOUTU
   'VISUAL_MODEL_TIMEOUT', 'OCR_FAILED', 'OCR_UNAVAILABLE']);
 
 function nowIso(now = Date.now) { return new Date(now()).toISOString(); }
+function elapsedMs(startedAtMs, now = Date.now) { return Math.max(0, now() - startedAtMs); }
 function videoIdFrom(value) {
   try {
     const input = /^https?:\/\//i.test(value) ? value : `https://${value}`;
@@ -123,12 +124,12 @@ class ReportManager {
     const jsonPath = path.join(this.reportsDir, `${base}.json`);
     const htmlPath = path.join(this.reportsDir, `${base}.html`);
     const segments = result.segmentJudgments || result.segments || [];
-    const safeWindows = (result.recommendedClips || []).map(item => ({
+    const safeWindows = (result.visualStatus === 'AVAILABLE' ? result.recommendedClips || [] : []).map(item => ({
       start: item.startSeconds, end: item.endSeconds, duration: item.endSeconds - item.startSeconds,
       confidence: 1, source: 'deterministic KEEP run', label: 'Recommended lower-risk window'
     }));
-    const warnings = [result.visualStatus === 'UNAVAILABLE' ? `Visual: ${result.visualError || 'UNAVAILABLE'}` : null,
-      result.ocrStatus === 'UNAVAILABLE' ? `OCR: ${result.ocrError || 'UNAVAILABLE'}` : null].filter(Boolean);
+    const warnings = [result.visualStatus === 'UNAVAILABLE' ? `Visual (${result.visualErrorCode || 'UNAVAILABLE'}): ${result.visualError || 'Unavailable'}` : null,
+      result.ocrStatus === 'UNAVAILABLE' ? `OCR (${result.ocrErrorCode || 'UNAVAILABLE'}): ${result.ocrError || 'Unavailable'}` : null].filter(Boolean);
     const report = {
       schemaVersion: 1, revisionId: job.revisionId, videoId: job.videoId,
       metadata: { title: result.title, channel: result.channelName, durationSeconds: result.durationSeconds, url: result.url || job.sourceUrl },
@@ -139,7 +140,7 @@ class ReportManager {
       policyIds: [...new Set(segments.flatMap(item => item.policyIds || []))],
       onScreenEvidence: segments.flatMap(item => item.evidence?.onScreenText || []),
       visualFindings: segments.flatMap(item => item.visualFindings || []), safeWindows,
-      metrics: result.metrics || {}, warnings
+      transcriptProvider: result.transcriptProvider || null, metrics: result.metrics || {}, warnings
     };
     this.fs.writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
     this.fs.writeFileSync(htmlPath, this.html(report), 'utf8');
@@ -150,7 +151,8 @@ class ReportManager {
     const rows = risky.map(item => `<tr><td>${escapeHtml(item.startLabel)}–${escapeHtml(item.endLabel)}</td><td>${escapeHtml(item.decision)}</td><td>${escapeHtml(item.reason || '')}</td><td>${escapeHtml((item.policyIds || []).join(', '))}</td></tr>`).join('');
     const windows = report.safeWindows.map(item => `<li>${escapeHtml(item.label)}: ${item.start.toFixed(1)}s–${item.end.toFixed(1)}s (${item.duration.toFixed(1)}s; ${escapeHtml(item.source)})</li>`).join('');
     const ocr = report.onScreenEvidence.slice(0, 50).map(item => `<li>${escapeHtml(item.text || item.normalizedText || '')}</li>`).join('');
-    return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(report.metadata.title || report.videoId)}</title><style>body{font:14px system-ui;max-width:1000px;margin:40px auto;padding:0 20px;color:#202124}h1{font-size:24px}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eee;font-weight:700}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}.warn{color:#9b3439}small{color:#666}</style></head><body><h1>${escapeHtml(report.metadata.title || report.videoId)}</h1><p>${escapeHtml(report.metadata.channel)} · ${Math.round(report.metadata.durationSeconds || 0)}s</p><p class="badge">${escapeHtml(report.videoResult)}</p><p>KEEP ${report.counts.keep} · REVIEW ${report.counts.review} · REMOVE ${report.counts.remove}</p><h2>Risky sections</h2><table><thead><tr><th>Time</th><th>Result</th><th>Reason</th><th>Policies</th></tr></thead><tbody>${rows || '<tr><td colspan="4">None</td></tr>'}</tbody></table><h2>On-screen text evidence</h2><ul>${ocr || '<li>None</li>'}</ul><h2>Recommended lower-risk windows</h2><ul>${windows || '<li>None found</li>'}</ul><h2>Subsystem warnings</h2><ul class="warn">${report.warnings.map(item => `<li>${escapeHtml(item)}</li>`).join('') || '<li>None</li>'}</ul><h2>Runtime</h2><pre>${escapeHtml(JSON.stringify(report.metrics, null, 2))}</pre><small>Automated risk assessment; not TikTok approval. Analyzed with ${escapeHtml(report.policyVersion)} / ${escapeHtml(report.analysisVersion)}.</small></body></html>`;
+    const provider = report.transcriptProvider?.provider === 'EMBEDDED_EXTENSION' ? 'Browser fallback' : 'Direct';
+    return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(report.metadata.title || report.videoId)}</title><style>body{font:14px system-ui;max-width:1000px;margin:40px auto;padding:0 20px;color:#202124}h1{font-size:24px}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eee;font-weight:700}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}.warn{color:#9b3439}small{color:#666}</style></head><body><h1>${escapeHtml(report.metadata.title || report.videoId)}</h1><p>${escapeHtml(report.metadata.channel)} · ${Math.round(report.metadata.durationSeconds || 0)}s</p><p class="badge">${escapeHtml(report.videoResult)}</p><p>KEEP ${report.counts.keep} · REVIEW ${report.counts.review} · REMOVE ${report.counts.remove}</p><h2>Risky sections</h2><table><thead><tr><th>Time</th><th>Result</th><th>Reason</th><th>Policies</th></tr></thead><tbody>${rows || '<tr><td colspan="4">None</td></tr>'}</tbody></table><h2>On-screen text evidence</h2><ul>${ocr || '<li>None</li>'}</ul><h2>Recommended lower-risk windows</h2><ul>${windows || '<li>None found</li>'}</ul><h2>Subsystem warnings</h2><ul class="warn">${report.warnings.map(item => `<li>${escapeHtml(item)}</li>`).join('') || '<li>None</li>'}</ul><h2>Runtime</h2><p><small>Transcript provider: ${provider}</small></p><pre>${escapeHtml(JSON.stringify(report.metrics, null, 2))}</pre><small>Automated risk assessment; not TikTok approval. Analyzed with ${escapeHtml(report.policyVersion)} / ${escapeHtml(report.analysisVersion)}.</small></body></html>`;
   }
   export(jobs, format, outputPath) {
     const rows = jobs.map(job => ({ videoId: job.videoId, title: job.title || '', channel: job.channel || '', url: job.sourceUrl,
@@ -319,4 +321,5 @@ class AnalysisQueue extends EventEmitter {
 }
 
 module.exports = { AnalysisJobStore, AnalysisQueue, GpuScheduler, JOB_STAGE, JOB_STATUS, ReportManager,
+  elapsedMs,
   STAGE_PROGRESS, aggregateResult, analysisFingerprint, errorRecord, parseBatchUrls, quarantine, segmentCounts, videoIdFrom };

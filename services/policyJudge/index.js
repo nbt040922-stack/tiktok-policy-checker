@@ -283,7 +283,8 @@ class PolicyJudgeService {
       overallDecision: removeCount ? 'REMOVE' : reviewCount ? 'REVIEW' : 'KEEP',
       segments, segmentJudgments: judgments, recommendedClips: findSafeWindows(judgments),
       transcriptSegments: ingestion.transcriptSegments, transcriptLanguage: ingestion.transcriptLanguage,
-      transcriptSource: ingestion.transcriptSource, channelName: ingestion.metadata.channelName,
+      transcriptSource: ingestion.transcriptSource, transcriptProvider: ingestion.transcriptProvider,
+      transcriptMetrics: ingestion.transcriptMetrics, channelName: ingestion.metadata.channelName,
       thumbnailUrl: ingestion.metadata.thumbnailUrl, policyVersion: this.repository.version,
       judge: { ...modelInfo, promptVersion: POLICY_JUDGE_PROMPT_VERSION }, analyzedAt: new Date().toISOString(), metrics
     };
@@ -311,8 +312,10 @@ class PolicyJudgeService {
     return {
       ...textResult, analysisVersion: 'local-qwen-visual-v3', overallDecision, segments,
       segmentJudgments: judgments, recommendedClips: findSafeWindows(judgments),
-      visualStatus: visualResult.visualStatus, visualError: visualResult.visualError,
-      ocrStatus: visualResult.ocrStatus, ocrError: visualResult.ocrError,
+      visualStatus: visualResult.visualStatus, visualErrorCode: visualResult.visualErrorCode || visualResult.visualError,
+      visualError: visualResult.visualError, visualFailureStage: visualResult.visualFailureStage || null,
+      ocrStatus: visualResult.ocrStatus, ocrErrorCode: visualResult.ocrErrorCode || visualResult.ocrError,
+      ocrError: visualResult.ocrError,
       visual: { model: visualConfig.model, detectorVersion: visualConfig.detectorVersion, thresholdVersion: visualConfig.thresholdVersion },
       metrics: { ...textResult.metrics, visual: visualResult.metrics }
     };
